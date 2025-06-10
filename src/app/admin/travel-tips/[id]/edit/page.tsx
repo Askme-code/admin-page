@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TravelTipForm } from "@/components/forms/TravelTipForm";
@@ -51,6 +52,7 @@ export default function EditTravelTipPage({ params }: { params: { id: string } }
         .from('travel_tips')
         .update({ 
           ...values,
+          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
         })
         .eq('id', params.id);
 
@@ -59,6 +61,7 @@ export default function EditTravelTipPage({ params }: { params: { id: string } }
       } else {
         toast({ title: "Success", description: "Travel tip updated successfully." });
         router.push("/admin/travel-tips");
+        router.refresh();
       }
     } catch (e) {
        toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
@@ -66,11 +69,11 @@ export default function EditTravelTipPage({ params }: { params: { id: string } }
   };
 
   if (loading) {
-    return <div>Loading travel tip...</div>;
+    return <div className="container py-8">Loading travel tip...</div>;
   }
 
   if (!travelTip) {
-    return <div>Travel tip not found or error loading. <Link href="/admin/travel-tips">Go back</Link></div>;
+    return <div className="container py-8">Travel tip not found or error loading. <Link href="/admin/travel-tips" className="text-primary hover:underline">Go back</Link></div>;
   }
 
   return (

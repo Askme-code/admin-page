@@ -1,7 +1,10 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Newspaper, Map, CalendarClock, Lightbulb, Users, BarChart3 } from "lucide-react";
 
-// Dummy stats - replace with actual data fetching
+import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Newspaper, Map, CalendarClock, Lightbulb, Users, BarChart3, PlusCircle } from "lucide-react";
+
+// Dummy stats - replace with actual data fetching logic if needed
 const stats = [
   { title: "Published Articles", value: "25", icon: Newspaper, color: "text-blue-500" },
   { title: "Total Destinations", value: "12", icon: Map, color: "text-green-500" },
@@ -9,6 +12,13 @@ const stats = [
   { title: "Travel Tips", value: "42", icon: Lightbulb, color: "text-yellow-500" },
   { title: "Registered Users", value: "150", icon: Users, color: "text-indigo-500" },
   { title: "Site Visits (Month)", value: "12,345", icon: BarChart3, color: "text-pink-500" },
+];
+
+const quickLinks = [
+    { title: "Add New Article", href: "/admin/articles/new", icon: Newspaper },
+    { title: "Add New Destination", href: "/admin/destinations/new", icon: Map },
+    { title: "Add New Event", href: "/admin/events/new", icon: CalendarClock },
+    { title: "Add New Travel Tip", href: "/admin/travel-tips/new", icon: Lightbulb },
 ];
 
 export default function AdminDashboardPage() {
@@ -25,9 +35,9 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                {/* You can add a comparison here, e.g., +5 from last month */}
-              </p>
+              {/* <p className="text-xs text-muted-foreground">
+                Placeholder for comparison, e.g., +5 from last month
+              </p> */}
             </CardContent>
           </Card>
         ))}
@@ -40,7 +50,7 @@ export default function AdminDashboardPage() {
             <CardDescription>Overview of recent content updates and user actions.</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Placeholder for recent activity feed */}
+            {/* Placeholder for recent activity feed - replace with actual data */}
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2"><Newspaper className="h-4 w-4 text-muted-foreground" /> New article "Exploring Tarangire" published.</li>
               <li className="flex items-center gap-2"><Map className="h-4 w-4 text-muted-foreground" /> Destination "Lake Manyara" updated.</li>
@@ -53,9 +63,15 @@ export default function AdminDashboardPage() {
             <CardTitle>Quick Links</CardTitle>
             <CardDescription>Access common admin tasks quickly.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-             <p className="text-muted-foreground">Management links will be here.</p>
-            {/* Links to /admin/articles/new etc. */}
+          <CardContent className="space-y-3">
+            {quickLinks.map((link) => (
+                <Button key={link.title} asChild variant="outline" className="w-full justify-start">
+                    <Link href={link.href}>
+                        <link.icon className="mr-2 h-4 w-4" />
+                        {link.title}
+                    </Link>
+                </Button>
+            ))}
           </CardContent>
         </Card>
       </div>

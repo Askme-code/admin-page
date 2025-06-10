@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DestinationForm } from "@/components/forms/DestinationForm";
@@ -55,6 +56,7 @@ export default function EditDestinationPage({ params }: { params: { id: string }
           featured_image: values.featured_image || null,
           location: values.location || null,
           highlights: values.highlights || [],
+          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
         })
         .eq('id', params.id);
 
@@ -63,6 +65,7 @@ export default function EditDestinationPage({ params }: { params: { id: string }
       } else {
         toast({ title: "Success", description: "Destination updated successfully." });
         router.push("/admin/destinations");
+        router.refresh(); 
       }
     } catch (e) {
        toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
@@ -70,11 +73,11 @@ export default function EditDestinationPage({ params }: { params: { id: string }
   };
   
   if (loading) {
-    return <div>Loading destination...</div>;
+    return <div className="container py-8">Loading destination...</div>;
   }
 
   if (!destination) {
-    return <div>Destination not found or error loading. <Link href="/admin/destinations">Go back</Link></div>;
+    return <div className="container py-8">Destination not found or error loading. <Link href="/admin/destinations" className="text-primary hover:underline">Go back</Link></div>;
   }
 
   return (

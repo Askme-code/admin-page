@@ -1,3 +1,4 @@
+
 "use client";
 
 import { EventForm } from "@/components/forms/EventForm";
@@ -53,6 +54,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
           ...values,
           event_date: values.event_date.toISOString(),
           featured_image: values.featured_image || null,
+          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
         })
         .eq('id', params.id);
 
@@ -61,6 +63,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
       } else {
         toast({ title: "Success", description: "Event updated successfully." });
         router.push("/admin/events");
+        router.refresh();
       }
     } catch (e) {
        toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
@@ -68,11 +71,11 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
   };
 
   if (loading) {
-    return <div>Loading event...</div>;
+    return <div className="container py-8">Loading event...</div>;
   }
   
   if (!event) {
-    return <div>Event not found or error loading. <Link href="/admin/events">Go back</Link></div>;
+    return <div className="container py-8">Event not found or error loading. <Link href="/admin/events" className="text-primary hover:underline">Go back</Link></div>;
   }
 
   return (
