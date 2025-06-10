@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +26,7 @@ export const travelTipSchema = z.object({
   content: z.string().min(10, { message: "Content is too short." }),
   icon: z.string().min(1, { message: "Icon name is required." }), 
   category: z.string().min(1, { message: "Category is required." }),
+  image: z.string().url({ message: "Please enter a valid URL for the image." }).optional().or(z.literal('')),
   status: z.enum(["draft", "published"]),
 });
 
@@ -39,12 +41,16 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
   const router = useRouter();
   const form = useForm<TravelTipFormValues>({
     resolver: zodResolver(travelTipSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      ...initialData,
+      image: initialData.image || '',
+    } : {
       title: "",
       slug: "",
       content: "",
       icon: "",
       category: "",
+      image: "",
       status: "draft",
     },
   });
@@ -120,6 +126,19 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
               <FormLabel>Category</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Health & Safety, Packing" {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image URL (Optional)</FormLabel>
+              <FormControl>
+                <Input type="url" placeholder="https://example.com/tip-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TravelTipForm } from "@/components/forms/TravelTipForm";
@@ -17,6 +18,7 @@ export default function NewTravelTipPage() {
       const { error } = await supabase.from('travel_tips').insert([
         { 
           ...values,
+          image: values.image || null,
         }
       ]);
 
@@ -25,6 +27,7 @@ export default function NewTravelTipPage() {
       } else {
         toast({ title: "Success", description: "Travel tip created successfully." });
         router.push("/admin/travel-tips");
+        router.refresh();
       }
     } catch (e) {
       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });

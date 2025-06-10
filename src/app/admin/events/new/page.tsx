@@ -1,3 +1,4 @@
+
 "use client";
 
 import { EventForm } from "@/components/forms/EventForm";
@@ -17,8 +18,9 @@ export default function NewEventPage() {
       const { error } = await supabase.from('events').insert([
         { 
           ...values,
-          event_date: values.event_date.toISOString(), // Ensure date is in ISO format for DB
+          event_date: values.event_date.toISOString(), 
           featured_image: values.featured_image || null,
+          image: values.image || null,
         }
       ]);
 
@@ -27,6 +29,7 @@ export default function NewEventPage() {
       } else {
         toast({ title: "Success", description: "Event created successfully." });
         router.push("/admin/events");
+        router.refresh();
       }
     } catch (e) {
       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });

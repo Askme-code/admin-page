@@ -1,3 +1,4 @@
+
 "use client";
 
 import { ArticleForm } from "@/components/forms/ArticleForm";
@@ -5,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import type * as z from "zod";
-import type { articleSchema } from "@/components/forms/ArticleForm"; // Assuming schema is exported or define type here
 
 type ArticleFormValues = z.infer<typeof import("@/components/forms/ArticleForm").articleSchema>;
 
@@ -21,7 +21,7 @@ export default function NewArticlePage() {
           ...values,
           excerpt: values.excerpt || null,
           featured_image: values.featured_image || null,
-          // Assuming created_at and updated_at are handled by DB or not required in insert
+          image: values.image || null, 
         }
       ]);
 
@@ -30,6 +30,7 @@ export default function NewArticlePage() {
       } else {
         toast({ title: "Success", description: "Article created successfully." });
         router.push("/admin/articles");
+        router.refresh(); 
       }
     } catch (e) {
       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });

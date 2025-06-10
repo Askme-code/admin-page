@@ -1,5 +1,7 @@
+
 "use client";
 
+import Link from 'next/link';
 import { ArticleForm } from "@/components/forms/ArticleForm";
 import type { Article } from "@/lib/types";
 import { supabase } from "@/lib/supabaseClient";
@@ -7,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type * as z from "zod";
-import Link from 'next/link'; // Added Link import
 
 type ArticleFormValues = z.infer<typeof import("@/components/forms/ArticleForm").articleSchema>;
 
@@ -54,7 +55,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           ...values, 
           excerpt: values.excerpt || null,
           featured_image: values.featured_image || null,
-          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
+          image: values.image || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', params.id);
 
@@ -63,7 +65,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       } else {
         toast({ title: "Success", description: "Article updated successfully." });
         router.push("/admin/articles");
-        router.refresh(); // Refresh server components
+        router.refresh(); 
       }
     } catch (e) {
        toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });

@@ -52,7 +52,8 @@ export default function EditTravelTipPage({ params }: { params: { id: string } }
         .from('travel_tips')
         .update({ 
           ...values,
-          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
+          image: values.image || null,
+          updated_at: new Date().toISOString(), 
         })
         .eq('id', params.id);
 

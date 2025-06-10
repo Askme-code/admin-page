@@ -1,3 +1,4 @@
+
 export interface Article {
   id: string;
   title: string;
@@ -6,6 +7,7 @@ export interface Article {
   excerpt?: string;
   category: string;
   featured_image?: string;
+  image?: string; // New field
   status: 'draft' | 'published';
   author: string; // Could be a user ID or name
   created_at: string; // ISO date string
@@ -18,6 +20,7 @@ export interface Destination {
   slug: string;
   description: string;
   featured_image?: string;
+  image?: string; // New field
   location?: string; // e.g., "Serengeti National Park" or GPS coordinates
   highlights?: string[];
   status: 'draft' | 'published';
@@ -33,6 +36,7 @@ export interface Event {
   event_date: string; // ISO date string
   location: string;
   featured_image?: string;
+  image?: string; // New field
   status: 'draft' | 'published';
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
@@ -45,6 +49,7 @@ export interface TravelTip {
   content: string;
   icon: string; // Suggests a specific icon name (e.g., from Lucide)
   category: string; // e.g., "Safety", "Packing", "Culture"
+  image?: string; // New field
   status: 'draft' | 'published';
   created_at: string; // ISO date string
   updated_at: string; // ISO date string

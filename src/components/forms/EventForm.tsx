@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +32,7 @@ export const eventSchema = z.object({
   event_date: z.date({ required_error: "Event date is required." }),
   location: z.string().min(1, { message: "Location is required." }),
   featured_image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  image: z.string().url({ message: "Please enter a valid URL for the image." }).optional().or(z.literal('')),
   status: z.enum(["draft", "published"]),
 });
 
@@ -47,8 +49,9 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
     resolver: zodResolver(eventSchema),
     defaultValues: initialData ? {
       ...initialData,
-      event_date: new Date(initialData.event_date), // Convert ISO string to Date
+      event_date: new Date(initialData.event_date), 
       featured_image: initialData.featured_image || '',
+      image: initialData.image || '',
     } : {
       title: "",
       slug: "",
@@ -56,6 +59,7 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
       event_date: new Date(),
       location: "",
       featured_image: "",
+      image: "",
       status: "draft",
     },
   });
@@ -169,7 +173,20 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
             <FormItem>
               <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+                <Input type="url" placeholder="https://example.com/featured-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Additional Image URL (Optional)</FormLabel>
+              <FormControl>
+                <Input type="url" placeholder="https://example.com/additional-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>

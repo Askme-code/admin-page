@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DestinationForm } from "@/components/forms/DestinationForm";
@@ -18,6 +19,7 @@ export default function NewDestinationPage() {
         { 
           ...values,
           featured_image: values.featured_image || null,
+          image: values.image || null,
           location: values.location || null,
           highlights: values.highlights || [],
         }
@@ -28,6 +30,7 @@ export default function NewDestinationPage() {
       } else {
         toast({ title: "Success", description: "Destination created successfully." });
         router.push("/admin/destinations");
+        router.refresh();
       }
     } catch (e) {
       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
