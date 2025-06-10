@@ -1,5 +1,10 @@
+
+"use client";
+
 import { TravelTipForm } from "@/components/forms/TravelTipForm";
 import type { TravelTip } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const dummyTravelTipToEdit: TravelTip = {
     id: '1',
@@ -13,11 +18,22 @@ const dummyTravelTipToEdit: TravelTip = {
     updated_at: '2023-05-01T10:00:00Z',
 };
 
-export default async function EditTravelTipPage({ params }: { params: { id: string } }) {
+export default function EditTravelTipPage({ params }: { params: { id: string } }) {
+  const { toast } = useToast();
+  const router = useRouter();
+
   const travelTip = dummyTravelTipToEdit; 
 
   const handleSubmit = async (values: any) => {
     console.log("Updating travel tip:", params.id, values);
+    // Example Supabase call:
+    // const { error } = await supabase.from('travel_tips').update(values).eq('id', params.id);
+    // if (error) {
+    //   toast({ title: "Error", description: error.message, variant: "destructive" });
+    // } else {
+    //   toast({ title: "Success", description: "Travel tip updated." });
+    //   router.push("/admin/travel-tips");
+    // }
     alert("Form submitted (check console). Implement actual Supabase call.");
   };
 

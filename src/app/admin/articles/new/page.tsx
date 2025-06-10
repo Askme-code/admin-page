@@ -1,11 +1,14 @@
+
+"use client";
+
 import { ArticleForm } from "@/components/forms/ArticleForm";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 // import { supabase } from "@/lib/supabaseClient"; // For actual submission
-// import { useToast } from "@/hooks/use-toast"; // For notifications
-// import { useRouter } from "next/navigation"; // For redirection
 
 export default function NewArticlePage() {
-  // const { toast } = useToast();
-  // const router = useRouter();
+  const { toast } = useToast();
+  const router = useRouter();
 
   const handleSubmit = async (values: any) => { // Type 'any' for Zod schema values
     console.log("Submitting new article:", values);

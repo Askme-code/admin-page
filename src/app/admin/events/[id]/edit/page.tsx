@@ -1,5 +1,10 @@
+
+"use client";
+
 import { EventForm } from "@/components/forms/EventForm";
 import type { Event } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const dummyEventToEdit: Event = {
   id: '1',
@@ -14,11 +19,22 @@ const dummyEventToEdit: Event = {
   updated_at: '2023-06-01T10:00:00Z',
 };
 
-export default async function EditEventPage({ params }: { params: { id: string } }) {
+export default function EditEventPage({ params }: { params: { id: string } }) {
+  const { toast } = useToast();
+  const router = useRouter();
+
   const event = dummyEventToEdit; 
 
   const handleSubmit = async (values: any) => {
     console.log("Updating event:", params.id, values);
+    // Example Supabase call:
+    // const { error } = await supabase.from('events').update(values).eq('id', params.id);
+    // if (error) {
+    //   toast({ title: "Error", description: error.message, variant: "destructive" });
+    // } else {
+    //   toast({ title: "Success", description: "Event updated." });
+    //   router.push("/admin/events");
+    // }
     alert("Form submitted (check console). Implement actual Supabase call.");
   };
 

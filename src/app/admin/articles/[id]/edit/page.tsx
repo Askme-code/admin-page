@@ -1,8 +1,11 @@
+
+"use client";
+
 import { ArticleForm } from "@/components/forms/ArticleForm";
 import type { Article } from "@/lib/types";
 // import { supabase } from "@/lib/supabaseClient"; // For actual submission
-// import { useToast } from "@/hooks/use-toast"; // For notifications
-// import { useRouter } from "next/navigation"; // For redirection
+import { useToast } from "@/hooks/use-toast"; // For notifications
+import { useRouter } from "next/navigation"; // For redirection
 
 // Dummy data for an existing article
 const dummyArticleToEdit: Article = {
@@ -19,9 +22,9 @@ const dummyArticleToEdit: Article = {
   updated_at: '2023-10-01T10:00:00Z',
 };
 
-export default async function EditArticlePage({ params }: { params: { id: string } }) {
-  // const { toast } = useToast();
-  // const router = useRouter();
+export default function EditArticlePage({ params }: { params: { id: string } }) {
+  const { toast } = useToast();
+  const router = useRouter();
 
   // In a real app, fetch article by ID from Supabase
   // const { data: article, error: fetchError } = await supabase.from('articles').select('*').eq('id', params.id).single();
