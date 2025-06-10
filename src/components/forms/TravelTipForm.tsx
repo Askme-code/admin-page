@@ -136,10 +136,11 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL (Optional)</FormLabel>
+              <FormLabel>Additional Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/tip-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+                <Textarea placeholder="https://example.com/tip-image.png" {...field} value={field.value ?? ""} rows={3} disabled={isLoading}/>
               </FormControl>
+              <FormDescription>Enter a valid URL for the additional image.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

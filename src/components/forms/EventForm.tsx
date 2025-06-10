@@ -186,8 +186,9 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
             <FormItem>
               <FormLabel>Additional Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/additional-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+                <Textarea placeholder="https://example.com/additional-image.png" {...field} value={field.value ?? ""} rows={3} disabled={isLoading} />
               </FormControl>
+              <FormDescription>Enter a valid URL for the additional image.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
