@@ -19,11 +19,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { TravelTip } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
-const travelTipSchema = z.object({
+export const travelTipSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   content: z.string().min(10, { message: "Content is too short." }),
-  icon: z.string().min(1, { message: "Icon name is required." }), // Lucide icon name
+  icon: z.string().min(1, { message: "Icon name is required." }), 
   category: z.string().min(1, { message: "Category is required." }),
   status: z.enum(["draft", "published"]),
 });
@@ -107,7 +107,7 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
               <FormControl>
                 <Input placeholder="e.g., ShieldCheck, Luggage (from Lucide)" {...field} disabled={isLoading} />
               </FormControl>
-              <FormDescription>Enter a valid Lucide icon name.</FormDescription>
+              <FormDescription>Enter a valid Lucide icon name (e.g. Droplet, Layers). See lucide.dev for options.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

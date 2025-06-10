@@ -1,25 +1,36 @@
-
 "use client";
 
 import { EventForm } from "@/components/forms/EventForm";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import type * as z from "zod";
+
+type EventFormValues = z.infer<typeof import("@/components/forms/EventForm").eventSchema>;
 
 export default function NewEventPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleSubmit = async (values: any) => {
-    console.log("Submitting new event:", values);
-    // Example Supabase call:
-    // const { error } = await supabase.from('events').insert([values]);
-    // if (error) {
-    //   toast({ title: "Error", description: error.message, variant: "destructive" });
-    // } else {
-    //   toast({ title: "Success", description: "Event created." });
-    //   router.push("/admin/events");
-    // }
-    alert("Form submitted (check console). Implement actual Supabase call.");
+  const handleSubmit = async (values: EventFormValues) => {
+    try {
+      const { error } = await supabase.from('events').insert([
+        { 
+          ...values,
+          event_date: values.event_date.toISOString(), // Ensure date is in ISO format for DB
+          featured_image: values.featured_image || null,
+        }
+      ]);
+
+      if (error) {
+        toast({ title: "Error creating event", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Success", description: "Event created successfully." });
+        router.push("/admin/events");
+      }
+    } catch (e) {
+      toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
+    }
   };
 
   return (

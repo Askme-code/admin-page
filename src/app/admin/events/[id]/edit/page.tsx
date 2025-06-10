@@ -1,45 +1,78 @@
-
 "use client";
 
 import { EventForm } from "@/components/forms/EventForm";
 import type { Event } from "@/lib/types";
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type * as z from "zod";
+import Link from 'next/link';
 
-const dummyEventToEdit: Event = {
-  id: '1',
-  title: 'Sauti za Busara Music Festival',
-  slug: 'sauti-za-busara',
-  description: 'Celebrates African music under African skies. A vibrant festival in Stone Town, Zanzibar.',
-  event_date: '2025-02-14T00:00:00Z',
-  location: 'Stone Town, Zanzibar',
-  featured_image: 'https://placehold.co/600x400.png',
-  status: 'published',
-  created_at: '2023-06-01T10:00:00Z',
-  updated_at: '2023-06-01T10:00:00Z',
-};
+type EventFormValues = z.infer<typeof import("@/components/forms/EventForm").eventSchema>;
 
 export default function EditEventPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const event = dummyEventToEdit; 
+  useEffect(() => {
+    if (!params.id) {
+      setLoading(false);
+      toast({ title: "Error", description: "No event ID provided.", variant: "destructive" });
+      router.push("/admin/events");
+      return;
+    }
+    const fetchEvent = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', params.id)
+        .single();
 
-  const handleSubmit = async (values: any) => {
-    console.log("Updating event:", params.id, values);
-    // Example Supabase call:
-    // const { error } = await supabase.from('events').update(values).eq('id', params.id);
-    // if (error) {
-    //   toast({ title: "Error", description: error.message, variant: "destructive" });
-    // } else {
-    //   toast({ title: "Success", description: "Event updated." });
-    //   router.push("/admin/events");
-    // }
-    alert("Form submitted (check console). Implement actual Supabase call.");
+      if (error) {
+        toast({ title: "Error fetching event", description: error.message, variant: "destructive" });
+        setEvent(null);
+      } else {
+        setEvent(data);
+      }
+      setLoading(false);
+    };
+
+    fetchEvent();
+  }, [params.id, toast, router]);
+
+  const handleSubmit = async (values: EventFormValues) => {
+    if (!params.id) return;
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ 
+          ...values,
+          event_date: values.event_date.toISOString(),
+          featured_image: values.featured_image || null,
+        })
+        .eq('id', params.id);
+
+      if (error) {
+        toast({ title: "Error updating event", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Success", description: "Event updated successfully." });
+        router.push("/admin/events");
+      }
+    } catch (e) {
+       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
+    }
   };
 
+  if (loading) {
+    return <div>Loading event...</div>;
+  }
+  
   if (!event) {
-    return <div>Loading event or event not found...</div>;
+    return <div>Event not found or error loading. <Link href="/admin/events">Go back</Link></div>;
   }
 
   return (

@@ -1,47 +1,75 @@
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, icons as lucideIcons } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, icons as lucideIcons, HelpCircle } from 'lucide-react';
 import type { TravelTip } from '@/lib/types';
 import type { LucideIcon } from 'lucide-react';
-
-
-// Dummy data
-const dummyAdminTravelTips: TravelTip[] = [
-  {
-    id: '1',
-    title: 'Stay Hydrated',
-    slug: 'stay-hydrated',
-    content: 'Drink plenty of water.',
-    icon: 'Droplet', // Lucide icon name
-    category: 'Health',
-    status: 'published',
-    created_at: '2023-05-01T10:00:00Z',
-    updated_at: '2023-05-01T10:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'Pack Light Layers',
-    slug: 'pack-light-layers',
-    content: 'Temperatures vary.',
-    icon: 'Layers',
-    category: 'Packing',
-    status: 'draft',
-    created_at: '2023-05-05T11:00:00Z',
-    updated_at: '2023-05-05T11:00:00Z',
-  },
-];
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const DynamicIcon = ({ name, ...props }: { name: string } & React.ComponentProps<LucideIcon>) => {
   const Icon = lucideIcons[name as keyof typeof lucideIcons] as LucideIcon | undefined;
-  if (!Icon) return <lucideIcons.HelpCircle {...props} />; // Default icon if not found
+  if (!Icon) return <HelpCircle {...props} />; 
   return <Icon {...props} />;
 };
 
+export default function AdminTravelTipsPage() {
+  const [travelTips, setTravelTips] = useState<TravelTip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { toast } = useToast();
 
-export default async function AdminTravelTipsPage() {
-  const travelTips = dummyAdminTravelTips;
+  useEffect(() => {
+    const fetchTravelTips = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('travel_tips')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({ title: "Error fetching travel tips", description: error.message, variant: "destructive" });
+        console.error("Error fetching travel tips:", error);
+      } else {
+        setTravelTips(data || []);
+      }
+      setLoading(false);
+    };
+    fetchTravelTips();
+  }, [toast]);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this travel tip?")) {
+      const { error } = await supabase.from('travel_tips').delete().eq('id', id);
+      if (error) {
+        toast({ title: "Error deleting travel tip", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Success", description: "Travel tip deleted successfully." });
+        setTravelTips(prevTips => prevTips.filter(tip => tip.id !== id));
+      }
+    }
+  };
+
+  if (loading) {
+     return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-headline font-semibold">Manage Travel Tips</h1>
+           <Button asChild>
+            <Link href="/admin/travel-tips/new">
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Travel Tip
+            </Link>
+          </Button>
+        </div>
+        <p>Loading travel tips...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -85,7 +113,7 @@ export default async function AdminTravelTipsPage() {
                         <Edit className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" className="hover:text-destructive">
+                    <Button variant="ghost" size="icon" className="hover:text-destructive" onClick={() => handleDelete(tip.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>

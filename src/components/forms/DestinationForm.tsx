@@ -19,13 +19,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Destination } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
-const destinationSchema = z.object({
+export const destinationSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   description: z.string().min(10, { message: "Description is too short." }),
   featured_image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   location: z.string().optional(),
-  highlights: z.array(z.string()).optional(), // Represent as comma-separated string in form, then parse
+  highlights: z.array(z.string()).optional(),
   status: z.enum(["draft", "published"]),
 });
 
@@ -43,7 +43,8 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
     defaultValues: initialData ? {
       ...initialData,
       featured_image: initialData.featured_image || '',
-      highlights: initialData.highlights || [], // Keep as array
+      location: initialData.location || '',
+      highlights: initialData.highlights || [], 
     } : {
       name: "",
       slug: "",
@@ -109,9 +110,9 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
           name="featured_image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Featured Image URL</FormLabel>
+              <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/image.png" {...field} disabled={isLoading} />
+                <Input type="url" placeholder="https://example.com/image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -122,9 +123,9 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Location (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Northern Tanzania" {...field} disabled={isLoading} />
+                <Input placeholder="e.g., Northern Tanzania" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -132,14 +133,13 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
         />
         <FormField
           control={form.control}
-          name="highlights" // This will be a comma-separated string input
+          name="highlights" 
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Highlights (comma-separated)</FormLabel>
+              <FormLabel>Highlights (Optional, comma-separated)</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Highlight 1, Highlight 2, Highlight 3" 
-                  // Adapt field for array to string and string to array
                   value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                   onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
                   disabled={isLoading} 

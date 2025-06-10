@@ -1,45 +1,80 @@
-
 "use client";
 
 import { DestinationForm } from "@/components/forms/DestinationForm";
 import type { Destination } from "@/lib/types";
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type * as z from "zod";
+import Link from 'next/link';
 
-const dummyDestinationToEdit: Destination = {
-  id: '1',
-  name: 'Serengeti National Park',
-  slug: 'serengeti-national-park',
-  description: 'Vast plains teeming with wildlife. A quintessential safari destination.',
-  featured_image: 'https://placehold.co/600x400.png',
-  location: 'Northern Tanzania',
-  highlights: ['The Great Migration', 'Big Five spotting', 'Hot air balloon safaris'],
-  status: 'published',
-  created_at: '2023-08-01T10:00:00Z',
-  updated_at: '2023-08-01T10:00:00Z',
-};
+type DestinationFormValues = z.infer<typeof import("@/components/forms/DestinationForm").destinationSchema>;
 
 export default function EditDestinationPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
+  const [destination, setDestination] = useState<Destination | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  const destination = dummyDestinationToEdit; 
+  useEffect(() => {
+    if (!params.id) {
+      setLoading(false);
+      toast({ title: "Error", description: "No destination ID provided.", variant: "destructive" });
+      router.push("/admin/destinations");
+      return;
+    }
 
-  const handleSubmit = async (values: any) => {
-    console.log("Updating destination:", params.id, values);
-    // Example Supabase call:
-    // const { error } = await supabase.from('destinations').update(values).eq('id', params.id);
-    // if (error) {
-    //   toast({ title: "Error", description: error.message, variant: "destructive" });
-    // } else {
-    //   toast({ title: "Success", description: "Destination updated." });
-    //   router.push("/admin/destinations");
-    // }
-    alert("Form submitted (check console). Implement actual Supabase call.");
+    const fetchDestination = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('destinations')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (error) {
+        toast({ title: "Error fetching destination", description: error.message, variant: "destructive" });
+        setDestination(null);
+      } else {
+        setDestination(data);
+      }
+      setLoading(false);
+    };
+
+    fetchDestination();
+  }, [params.id, toast, router]);
+
+  const handleSubmit = async (values: DestinationFormValues) => {
+    if (!params.id) return;
+    try {
+      const { error } = await supabase
+        .from('destinations')
+        .update({ 
+          ...values,
+          featured_image: values.featured_image || null,
+          location: values.location || null,
+          highlights: values.highlights || [],
+        })
+        .eq('id', params.id);
+
+      if (error) {
+        toast({ title: "Error updating destination", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Success", description: "Destination updated successfully." });
+        router.push("/admin/destinations");
+      }
+    } catch (e) {
+       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
+    }
   };
+  
+  if (loading) {
+    return <div>Loading destination...</div>;
+  }
 
   if (!destination) {
-    return <div>Loading destination or destination not found...</div>;
+    return <div>Destination not found or error loading. <Link href="/admin/destinations">Go back</Link></div>;
   }
 
   return (

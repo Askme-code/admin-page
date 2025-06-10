@@ -1,44 +1,76 @@
-
 "use client";
 
 import { TravelTipForm } from "@/components/forms/TravelTipForm";
 import type { TravelTip } from "@/lib/types";
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type * as z from "zod";
+import Link from 'next/link';
 
-const dummyTravelTipToEdit: TravelTip = {
-    id: '1',
-    title: 'Stay Hydrated',
-    slug: 'stay-hydrated',
-    content: 'Tanzania can be hot and humid, especially at lower altitudes. Drink plenty of bottled or purified water throughout the day.',
-    icon: 'Droplet', 
-    category: 'Health & Safety',
-    status: 'published',
-    created_at: '2023-05-01T10:00:00Z',
-    updated_at: '2023-05-01T10:00:00Z',
-};
+type TravelTipFormValues = z.infer<typeof import("@/components/forms/TravelTipForm").travelTipSchema>;
 
 export default function EditTravelTipPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
+  const [travelTip, setTravelTip] = useState<TravelTip | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const travelTip = dummyTravelTipToEdit; 
+  useEffect(() => {
+    if (!params.id) {
+      setLoading(false);
+      toast({ title: "Error", description: "No travel tip ID provided.", variant: "destructive" });
+      router.push("/admin/travel-tips");
+      return;
+    }
+    const fetchTravelTip = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('travel_tips')
+        .select('*')
+        .eq('id', params.id)
+        .single();
 
-  const handleSubmit = async (values: any) => {
-    console.log("Updating travel tip:", params.id, values);
-    // Example Supabase call:
-    // const { error } = await supabase.from('travel_tips').update(values).eq('id', params.id);
-    // if (error) {
-    //   toast({ title: "Error", description: error.message, variant: "destructive" });
-    // } else {
-    //   toast({ title: "Success", description: "Travel tip updated." });
-    //   router.push("/admin/travel-tips");
-    // }
-    alert("Form submitted (check console). Implement actual Supabase call.");
+      if (error) {
+        toast({ title: "Error fetching travel tip", description: error.message, variant: "destructive" });
+        setTravelTip(null);
+      } else {
+        setTravelTip(data);
+      }
+      setLoading(false);
+    };
+
+    fetchTravelTip();
+  }, [params.id, toast, router]);
+
+  const handleSubmit = async (values: TravelTipFormValues) => {
+    if (!params.id) return;
+    try {
+      const { error } = await supabase
+        .from('travel_tips')
+        .update({ 
+          ...values,
+        })
+        .eq('id', params.id);
+
+      if (error) {
+        toast({ title: "Error updating travel tip", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Success", description: "Travel tip updated successfully." });
+        router.push("/admin/travel-tips");
+      }
+    } catch (e) {
+       toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
+    }
   };
 
+  if (loading) {
+    return <div>Loading travel tip...</div>;
+  }
+
   if (!travelTip) {
-    return <div>Loading travel tip or tip not found...</div>;
+    return <div>Travel tip not found or error loading. <Link href="/admin/travel-tips">Go back</Link></div>;
   }
 
   return (

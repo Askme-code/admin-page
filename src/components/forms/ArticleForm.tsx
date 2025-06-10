@@ -17,9 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Article } from "@/lib/types";
-import { useRouter } from "next/navigation"; // Corrected import
+import { useRouter } from "next/navigation"; 
 
-const articleSchema = z.object({
+export const articleSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   content: z.string().min(10, { message: "Content is too short." }),
@@ -44,6 +44,7 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
     defaultValues: initialData ? {
       ...initialData,
       featured_image: initialData.featured_image || '',
+      excerpt: initialData.excerpt || '',
     } : {
       title: "",
       slug: "",
@@ -60,7 +61,6 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
 
   const handleSubmit = async (values: ArticleFormValues) => {
     await onSubmit(values);
-    // Optionally, redirect or show a success message
   };
 
   return (
@@ -112,9 +112,9 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
           name="excerpt"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Excerpt</FormLabel>
+              <FormLabel>Excerpt (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Short summary of the article" {...field} rows={3} disabled={isLoading} />
+                <Textarea placeholder="Short summary of the article" {...field} value={field.value ?? ""} rows={3} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -138,9 +138,9 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
           name="featured_image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Featured Image URL</FormLabel>
+              <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/image.png" {...field} disabled={isLoading} />
+                <Input type="url" placeholder="https://example.com/image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>

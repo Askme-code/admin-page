@@ -24,7 +24,7 @@ import { format } from "date-fns";
 import type { Event } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
-const eventSchema = z.object({
+export const eventSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   description: z.string().min(10, { message: "Description is too short." }),
@@ -47,7 +47,7 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
     resolver: zodResolver(eventSchema),
     defaultValues: initialData ? {
       ...initialData,
-      event_date: new Date(initialData.event_date),
+      event_date: new Date(initialData.event_date), // Convert ISO string to Date
       featured_image: initialData.featured_image || '',
     } : {
       title: "",
@@ -167,9 +167,9 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
           name="featured_image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Featured Image URL</FormLabel>
+              <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/image.png" {...field} disabled={isLoading} />
+                <Input type="url" placeholder="https://example.com/image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
