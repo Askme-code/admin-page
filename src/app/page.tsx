@@ -2,37 +2,60 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CalendarDays, MapPin, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, Users, Terminal } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { supabase } from '@/lib/supabaseClient';
+import type { Article, Destination, Event } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Dummy data - replace with actual data fetching
-const featuredArticle = {
-  title: 'A Week in Zanzibar: Sun, Sand, and Spices',
-  slug: 'a-week-in-zanzibar',
-  excerpt: 'Discover the magic of Zanzibar, from its pristine beaches to its historic Stone Town and aromatic spice farms.',
-  imageUrl: 'https://placehold.co/600x400.png',
-  aiHint: 'Zanzibar beach',
-};
+async function getFeaturedData() {
+  const articlePromise = supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-const popularDestination = {
-  name: 'Serengeti National Park',
-  slug: 'serengeti-national-park',
-  description: 'Witness the Great Migration and spot the Big Five in Africa\'s most famous safari destination.',
-  imageUrl: 'https://placehold.co/600x400.png',
-  aiHint: 'Serengeti wildlife',
-};
+  const destinationPromise = supabase
+    .from('destinations')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false }) // Or some other metric for "popular"
+    .limit(1)
+    .maybeSingle();
 
-const upcomingEvent = {
-  title: 'Sauti za Busara Music Festival',
-  slug: 'sauti-za-busara',
-  date: 'February 14-16, 2025',
-  location: 'Stone Town, Zanzibar',
-  imageUrl: 'https://placehold.co/600x400.png',
-  aiHint: 'music festival',
-};
+  const eventPromise = supabase
+    .from('events')
+    .select('*')
+    .eq('status', 'published')
+    .order('event_date', { ascending: true }) // Upcoming
+    .limit(1)
+    .maybeSingle();
 
-export default function HomePage() {
+  const [articleResult, destinationResult, eventResult] = await Promise.all([
+    articlePromise,
+    destinationPromise,
+    eventPromise,
+  ]);
+
+  return {
+    featuredArticle: articleResult.data as Article | null,
+    popularDestination: destinationResult.data as Destination | null,
+    upcomingEvent: eventResult.data as Event | null,
+    error: articleResult.error || destinationResult.error || eventResult.error,
+  };
+}
+
+
+export default async function HomePage() {
+  const { featuredArticle, popularDestination, upcomingEvent, error } = await getFeaturedData();
+
+  if (error) {
+    console.error("Error fetching featured data for homepage:", error);
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -58,114 +81,135 @@ export default function HomePage() {
           </div>
         </section>
 
+        {error && (
+          <section className="py-8 bg-background">
+            <div className="container">
+              <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Error Loading Page Content</AlertTitle>
+                <AlertDescription>
+                  Some content could not be loaded. Please try refreshing the page.
+                  {process.env.NODE_ENV === 'development' && <p className="mt-2 text-xs">Details: {error.message}</p>}
+                </AlertDescription>
+              </Alert>
+            </div>
+          </section>
+        )}
+
         {/* Featured Article Section */}
-        <section className="py-16 bg-background">
-          <div className="container">
-            <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Featured Story</h2>
-            <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="md:flex">
-                <div className="md:w-1/2">
-                  <Image
-                    src={featuredArticle.imageUrl}
-                    alt={featuredArticle.title}
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-64 md:h-full"
-                    data-ai-hint={featuredArticle.aiHint}
-                  />
+        {featuredArticle && (
+          <section className="py-16 bg-background">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Featured Story</h2>
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="md:flex">
+                  <div className="md:w-1/2">
+                    <Image
+                      src={featuredArticle.featured_image || 'https://placehold.co/600x400.png'}
+                      alt={featuredArticle.title}
+                      width={600}
+                      height={400}
+                      className="object-cover w-full h-64 md:h-full"
+                      data-ai-hint="travel blog featured"
+                    />
+                  </div>
+                  <div className="md:w-1/2">
+                    <CardHeader>
+                      <CardTitle className="font-headline text-2xl">{featuredArticle.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-base line-clamp-3">{featuredArticle.excerpt}</CardDescription>
+                    </CardContent>
+                    <CardFooter>
+                      <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
+                        <Link href={`/articles/${featuredArticle.slug}`}>Read More <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                    </CardFooter>
+                  </div>
                 </div>
-                <div className="md:w-1/2">
-                  <CardHeader>
-                    <CardTitle className="font-headline text-2xl">{featuredArticle.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base">{featuredArticle.excerpt}</CardDescription>
-                  </CardContent>
-                  <CardFooter>
-                    <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                      <Link href={`/articles/${featuredArticle.slug}`}>Read More <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                  </CardFooter>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </section>
+              </Card>
+            </div>
+          </section>
+        )}
 
         {/* Popular Destination Section */}
-        <section className="py-16 bg-secondary/30">
-          <div className="container">
-            <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Popular Destination</h2>
-            <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-               <div className="md:flex md:flex-row-reverse">
-                <div className="md:w-1/2">
-                  <Image
-                    src={popularDestination.imageUrl}
-                    alt={popularDestination.name}
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-64 md:h-full"
-                    data-ai-hint={popularDestination.aiHint}
-                  />
+        {popularDestination && (
+          <section className="py-16 bg-secondary/30">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Popular Destination</h2>
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                 <div className="md:flex md:flex-row-reverse">
+                  <div className="md:w-1/2">
+                    <Image
+                      src={popularDestination.featured_image || 'https://placehold.co/600x400.png'}
+                      alt={popularDestination.name}
+                      width={600}
+                      height={400}
+                      className="object-cover w-full h-64 md:h-full"
+                      data-ai-hint="popular destination"
+                    />
+                  </div>
+                  <div className="md:w-1/2">
+                    <CardHeader>
+                      <CardTitle className="font-headline text-2xl">{popularDestination.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-base line-clamp-3">{popularDestination.description}</CardDescription>
+                    </CardContent>
+                    <CardFooter>
+                       <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
+                        <Link href={`/destinations/${popularDestination.slug}`}>Learn More <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                    </CardFooter>
+                  </div>
                 </div>
-                <div className="md:w-1/2">
-                  <CardHeader>
-                    <CardTitle className="font-headline text-2xl">{popularDestination.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base">{popularDestination.description}</CardDescription>
-                  </CardContent>
-                  <CardFooter>
-                     <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                      <Link href={`/destinations/${popularDestination.slug}`}>Learn More <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                  </CardFooter>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </section>
+              </Card>
+            </div>
+          </section>
+        )}
         
         {/* Upcoming Event Section */}
-        <section className="py-16 bg-background">
-          <div className="container">
-            <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Upcoming Event</h2>
-            <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="md:flex">
-                 <div className="md:w-1/2">
-                  <Image
-                    src={upcomingEvent.imageUrl}
-                    alt={upcomingEvent.title}
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-64 md:h-full"
-                    data-ai-hint={upcomingEvent.aiHint}
-                  />
+        {upcomingEvent && (
+          <section className="py-16 bg-background">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Upcoming Event</h2>
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="md:flex">
+                   <div className="md:w-1/2">
+                    <Image
+                      src={upcomingEvent.featured_image || 'https://placehold.co/600x400.png'}
+                      alt={upcomingEvent.title}
+                      width={600}
+                      height={400}
+                      className="object-cover w-full h-64 md:h-full"
+                      data-ai-hint="upcoming event"
+                    />
+                  </div>
+                  <div className="md:w-1/2">
+                    <CardHeader>
+                      <CardTitle className="font-headline text-2xl">{upcomingEvent.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center text-muted-foreground">
+                        <CalendarDays className="mr-2 h-5 w-5" />
+                        <span>{new Date(upcomingEvent.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center text-muted-foreground">
+                        <MapPin className="mr-2 h-5 w-5" />
+                        <span>{upcomingEvent.location}</span>
+                      </div>
+                    </CardContent>
+                     <CardFooter>
+                       <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
+                        <Link href={`/events/${upcomingEvent.slug}`}>Event Details <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                    </CardFooter>
+                  </div>
                 </div>
-                <div className="md:w-1/2">
-                  <CardHeader>
-                    <CardTitle className="font-headline text-2xl">{upcomingEvent.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center text-muted-foreground">
-                      <CalendarDays className="mr-2 h-5 w-5" />
-                      <span>{upcomingEvent.date}</span>
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="mr-2 h-5 w-5" />
-                      <span>{upcomingEvent.location}</span>
-                    </div>
-                  </CardContent>
-                   <CardFooter>
-                     <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                      <Link href={`/events/${upcomingEvent.slug}`}>Event Details <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                  </CardFooter>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </section>
+              </Card>
+            </div>
+          </section>
+        )}
 
         {/* Travel Tips Teaser */}
         <section className="py-16 bg-primary/10">

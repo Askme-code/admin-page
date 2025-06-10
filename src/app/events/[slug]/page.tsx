@@ -3,37 +3,35 @@ import type { Event } from '@/lib/types';
 import { CalendarDays, MapPin, Info } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from 'lucide-react';
+import Link from 'next/link';
 
-// Dummy data - replace with actual data fetching from Supabase
-const dummyEvent: Event = {
-  id: '1',
-  title: 'Sauti za Busara Music Festival',
-  slug: 'sauti-za-busara',
-  description: `
-    <p>Sauti za Busara ("Sounds of Wisdom" in Swahili) is an acclaimed African music festival held annually in Stone Town, Zanzibar. It showcases a diverse line-up of artists from across the African continent and diaspora, celebrating the richness and variety of African music.</p>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Festival Atmosphere</h2>
-    <p>The festival takes place over several days, primarily at the historic Old Fort (Ngome Kongwe). Expect a vibrant atmosphere with multiple stages, food stalls, and craft markets. It's a fantastic opportunity to experience live music, dance, and connect with people from all over the world.</p>
-    <figure class="my-6">
-      <img src="https://placehold.co/800x500.png" alt="Sauti za Busara Stage" class="rounded-lg shadow-md mx-auto" data-ai-hint="music festival stage">
-      <figcaption class="text-center text-sm text-muted-foreground mt-2">A performance at Sauti za Busara.</figcaption>
-    </figure>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Line-up and Tickets</h2>
-    <p>The line-up typically features a mix of established stars and emerging talents. Genres range from Taarab and Bongo Flava to Afrobeat, reggae, and traditional sounds. Tickets are usually available online in advance, with options for full festival passes or day tickets.</p>
-    <p>For the most up-to-date information on artists, schedules, and ticketing, please visit the official Sauti za Busara website.</p>
-  `,
-  event_date: '2025-02-14T00:00:00Z',
-  location: 'Stone Town, Zanzibar',
-  featured_image: 'https://placehold.co/1200x600.png',
-  status: 'published',
-  created_at: '2023-06-01T10:00:00Z',
-  updated_at: '2023-06-01T10:00:00Z',
-};
+export async function generateStaticParams() {
+  const { data: events, error } = await supabase
+    .from('events')
+    .select('slug')
+    .eq('status', 'published');
+
+  if (error || !events) {
+    return [];
+  }
+  return events.map(({ slug }) => ({ slug }));
+}
+
 
 export default async function EventDetailPage({ params }: { params: { slug: string } }) {
-  // In a real app, fetch event by slug from Supabase
-  // const { data: event, error } = await supabase.from('events').select('*').eq('slug', params.slug).single();
-  const event = dummyEvent; // Using dummy data
+  const { data: event, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching event:', error);
+  }
 
   if (!event) {
      return (
@@ -41,7 +39,15 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
         <Header />
         <main className="flex-grow container py-12 text-center">
           <h1 className="font-headline text-4xl font-semibold">Event Not Found</h1>
-          <p className="text-muted-foreground mt-4">The event you are looking for does not exist.</p>
+          <p className="text-muted-foreground mt-4">The event you are looking for does not exist or is not published.</p>
+          <Link href="/events" className="mt-4 inline-block text-primary hover:underline">Back to events</Link>
+          {error && error.code !== 'PGRST116' && process.env.NODE_ENV === 'development' && (
+             <Alert variant="destructive" className="mt-8 text-left">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Error Details (Development Mode)</AlertTitle>
+              <AlertDescription>{error.message}</AlertDescription>
+            </Alert>
+          )}
         </main>
         <Footer />
       </div>
@@ -100,9 +106,3 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
     </div>
   );
 }
-
-// Optional: Generate static paths
-// export async function generateStaticParams() {
-//   // Fetch all event slugs from Supabase
-//   return [{ slug: 'sauti-za-busara' }, { slug: 'kilimanjaro-marathon' }];
-// }

@@ -4,45 +4,50 @@ import { MapPin, Star, ListChecks } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from 'lucide-react';
+import Link from 'next/link';
 
-// Dummy data - replace with actual data fetching from Supabase
-const dummyDestination: Destination = {
-  id: '1',
-  name: 'Serengeti National Park',
-  slug: 'serengeti-national-park',
-  description: `
-    <p>The Serengeti National Park is a Tanzanian national park in the Serengeti ecosystem in the Mara and Simiyu regions. It is famous for its annual migration of over 1.5 million white-bearded (or brindled) wildebeest and 250,000 zebra and for its numerous Nile crocodile and honey badger.</p>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Wildlife Spectacle</h2>
-    <p>Often described as the 'endless plains,' the Serengeti offers unparalleled wildlife viewing. The park is home to the "Big Five" (lion, leopard, elephant, rhino, and buffalo) and a myriad of other species. Birdwatching is also exceptional, with over 500 species recorded.</p>
-    <h2 class="text-2xl font-headline mt-6 mb-3">The Great Migration</h2>
-    <p>One of Earth's most impressive natural events, the Great Migration sees millions of wildebeest, zebra, and gazelle traverse the plains in search of fresh grazing. This dramatic spectacle is a must-see for any wildlife enthusiast.</p>
-    <figure class="my-6">
-      <img src="https://placehold.co/800x500.png" alt="Serengeti Migration" class="rounded-lg shadow-md mx-auto" data-ai-hint="Serengeti migration">
-      <figcaption class="text-center text-sm text-muted-foreground mt-2">Wildebeest crossing the Mara River during the Great Migration.</figcaption>
-    </figure>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Activities</h2>
-    <p>Beyond game drives, visitors can enjoy hot air balloon safaris at dawn, offering a breathtaking perspective of the plains. Cultural visits to nearby Maasai villages provide insight into the local traditions and way of life.</p>
-  `,
-  featured_image: 'https://placehold.co/1200x600.png',
-  location: 'Northern Tanzania',
-  highlights: ['The Great Migration', 'Big Five spotting', 'Hot air balloon safaris', 'Maasai cultural visits', 'Diverse birdlife'],
-  status: 'published',
-  created_at: '2023-08-01T10:00:00Z',
-  updated_at: '2023-08-01T10:00:00Z',
-};
+export async function generateStaticParams() {
+  const { data: destinations, error } = await supabase
+    .from('destinations')
+    .select('slug')
+    .eq('status', 'published');
+  
+  if (error || !destinations) {
+    return [];
+  }
+  return destinations.map(({ slug }) => ({ slug }));
+}
 
 export default async function DestinationDetailPage({ params }: { params: { slug: string } }) {
-  // In a real app, fetch destination by slug from Supabase
-  // const { data: destination, error } = await supabase.from('destinations').select('*').eq('slug', params.slug).single();
-  const destination = dummyDestination; // Using dummy data
+  const { data: destination, error } = await supabase
+    .from('destinations')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single();
 
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching destination:', error);
+  }
+  
   if (!destination) {
      return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container py-12 text-center">
           <h1 className="font-headline text-4xl font-semibold">Destination Not Found</h1>
-          <p className="text-muted-foreground mt-4">The destination you are looking for does not exist.</p>
+          <p className="text-muted-foreground mt-4">The destination you are looking for does not exist or is not published.</p>
+          <Link href="/destinations" className="mt-4 inline-block text-primary hover:underline">Back to destinations</Link>
+          {error && error.code !== 'PGRST116' && process.env.NODE_ENV === 'development' && (
+            <Alert variant="destructive" className="mt-8 text-left">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Error Details (Development Mode)</AlertTitle>
+              <AlertDescription>{error.message}</AlertDescription>
+            </Alert>
+          )}
         </main>
         <Footer />
       </div>
@@ -105,9 +110,3 @@ export default async function DestinationDetailPage({ params }: { params: { slug
     </div>
   );
 }
-
-// Optional: Generate static paths
-// export async function generateStaticParams() {
-//   // Fetch all destination slugs from Supabase
-//   return [{ slug: 'serengeti-national-park' }, { slug: 'zanzibar-archipelago' }];
-// }

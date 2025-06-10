@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type * as z from "zod";
+import Link from 'next/link'; // Added Link import
 
 type ArticleFormValues = z.infer<typeof import("@/components/forms/ArticleForm").articleSchema>;
 
@@ -53,7 +54,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           ...values, 
           excerpt: values.excerpt || null,
           featured_image: values.featured_image || null,
-          // updated_at should ideally be handled by the database on update
+          updated_at: new Date().toISOString(), // Ensure updated_at is set on update
         })
         .eq('id', params.id);
 
@@ -62,6 +63,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       } else {
         toast({ title: "Success", description: "Article updated successfully." });
         router.push("/admin/articles");
+        router.refresh(); // Refresh server components
       }
     } catch (e) {
        toast({ title: "An unexpected error occurred", description: (e as Error).message, variant: "destructive" });
@@ -69,11 +71,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   };
 
   if (loading) {
-    return <div>Loading article...</div>;
+    return <div className="container py-8">Loading article...</div>;
   }
   
   if (!article) {
-    return <div>Article not found or error loading. <Link href="/admin/articles">Go back</Link></div>;
+    return <div className="container py-8">Article not found or error loading. <Link href="/admin/articles" className="text-primary hover:underline">Go back</Link></div>;
   }
 
   return (

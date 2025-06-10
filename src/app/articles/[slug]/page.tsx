@@ -4,44 +4,34 @@ import { CalendarDays, UserCircle, Tag } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from 'lucide-react';
+import Link from 'next/link';
 
-// Dummy data - replace with actual data fetching from Supabase
-const dummyArticle: Article = {
-  id: '1',
-  title: 'The Ultimate Guide to Climbing Mount Kilimanjaro',
-  slug: 'climbing-mount-kilimanjaro',
-  content: `
-    <p>Mount Kilimanjaro, Africa's highest peak and the world's tallest free-standing mountain, offers an unparalleled adventure for trekkers. This guide will walk you through everything you need to know to prepare for this incredible journey.</p>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Choosing Your Route</h2>
-    <p>There are several routes to the summit, each with its own unique scenery, difficulty, and acclimatization profile. Popular choices include the Machame, Lemosho, and Marangu routes.</p>
-    <ul class="list-disc list-inside my-4 space-y-1">
-      <li><strong>Machame (Whiskey Route):</strong> Known for its scenic beauty, it offers good acclimatization but is more challenging.</li>
-      <li><strong>Lemosho Route:</strong> Also very scenic, with excellent acclimatization and higher success rates. Longer duration.</li>
-      <li><strong>Marangu (Coca-Cola Route):</strong> The oldest and most established route, offering hut accommodations. Generally considered easier but with a steeper final ascent.</li>
-    </ul>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Physical Preparation</h2>
-    <p>While you don't need to be a professional mountaineer, a good level of physical fitness is essential. Focus on cardiovascular endurance, strength training, and hiking on varied terrain with a weighted pack.</p>
-    <h2 class="text-2xl font-headline mt-6 mb-3">Packing Essentials</h2>
-    <p>Proper gear is crucial for a safe and comfortable climb. Key items include layered clothing, waterproof outerwear, sturdy hiking boots, a warm sleeping bag, trekking poles, and a headlamp.</p>
-    <figure class="my-6">
-      <img src="https://placehold.co/800x500.png" alt="Kilimanjaro Summit" class="rounded-lg shadow-md mx-auto" data-ai-hint="Kilimanjaro summit">
-      <figcaption class="text-center text-sm text-muted-foreground mt-2">The breathtaking view from Uhuru Peak.</figcaption>
-    </figure>
-    <p>Embarking on the Kilimanjaro trek is a challenging yet profoundly rewarding experience. With proper preparation and a determined spirit, you can stand on the roof of Africa.</p>
-  `,
-  excerpt: 'Everything you need to know before embarking on the adventure of a lifetime to conquer Africa\'s highest peak.',
-  category: 'Adventure',
-  featured_image: 'https://placehold.co/1200x600.png',
-  status: 'published',
-  author: 'John Doe',
-  created_at: '2023-10-01T10:00:00Z',
-  updated_at: '2023-10-01T10:00:00Z',
-};
+export async function generateStaticParams() {
+  const { data: articles, error } = await supabase
+    .from('articles')
+    .select('slug')
+    .eq('status', 'published');
+
+  if (error || !articles) {
+    return [];
+  }
+  return articles.map(({ slug }) => ({ slug }));
+}
 
 export default async function ArticleDetailPage({ params }: { params: { slug: string } }) {
-  // In a real app, fetch article by slug from Supabase
-  // const { data: article, error } = await supabase.from('articles').select('*').eq('slug', params.slug).single();
-  const article = dummyArticle; // Using dummy data
+  const { data: article, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116: "The result contains 0 rows" which means not found
+    console.error('Error fetching article:', error);
+  }
 
   if (!article) {
     return (
@@ -49,7 +39,15 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
         <Header />
         <main className="flex-grow container py-12 text-center">
           <h1 className="font-headline text-4xl font-semibold">Article Not Found</h1>
-          <p className="text-muted-foreground mt-4">The article you are looking for does not exist.</p>
+          <p className="text-muted-foreground mt-4">The article you are looking for does not exist or is not published.</p>
+          <Link href="/articles" className="mt-4 inline-block text-primary hover:underline">Back to articles</Link>
+          {error && error.code !== 'PGRST116' && process.env.NODE_ENV === 'development' && (
+            <Alert variant="destructive" className="mt-8 text-left">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Error Details (Development Mode)</AlertTitle>
+              <AlertDescription>{error.message}</AlertDescription>
+            </Alert>
+          )}
         </main>
         <Footer />
       </div>
@@ -103,11 +101,3 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
     </div>
   );
 }
-
-// Optional: Generate static paths if you have a known set of articles
-// export async function generateStaticParams() {
-//   // Fetch all article slugs from Supabase
-//   // const { data: articles } = await supabase.from('articles').select('slug').eq('status', 'published');
-//   // return articles?.map(({ slug }) => ({ slug })) || [];
-//   return [{ slug: 'climbing-mount-kilimanjaro' }, { slug: 'exploring-stone-town-zanzibar' }];
-// }
