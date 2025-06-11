@@ -37,7 +37,7 @@ export default function AdminSidebar() {
       description: 'You have been successfully logged out.',
     });
     router.push('/login');
-    router.refresh(); // Force refresh to ensure state is cleared
+    // No need to call router.refresh() here, the AdminLayout will handle the redirect if an admin page is visited again.
   };
 
   return (
@@ -47,7 +47,7 @@ export default function AdminSidebar() {
           <MountainSnow className="h-7 w-7 text-primary" />
           <span className="group-data-[collapsible=icon]:hidden">Admin Panel</span>
         </Link>
-        <div className="md:hidden ml-auto"> {/* Only show trigger on mobile if sidebar is part of sheet */}
+        <div className="md:hidden ml-auto"> 
            <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -81,16 +81,12 @@ export default function AdminSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton 
-                    asChild 
                     tooltip="Logout" 
                     className="hover:bg-destructive/20 hover:text-destructive data-[active=true]:bg-destructive/20 data-[active=true]:text-destructive"
-                    onClick={handleLogout}
+                    onClick={handleLogout} // Direct onClick handler for the button
                 >
-                    {/* Button element used directly for onClick */}
-                    <button>
-                        <LogOut />
-                        <span>Logout</span>
-                    </button>
+                    <LogOut />
+                    <span>Logout</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>

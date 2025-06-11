@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +20,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       localStorage.setItem('isAdminLoggedIn', 'true');
@@ -31,7 +34,8 @@ export default function LoginPage() {
         description: 'Redirecting to admin dashboard...',
       });
       router.push('/admin');
-      router.refresh(); // Ensures layout re-renders if it depends on auth state
+      // router.refresh() might be needed if layout doesn't re-evaluate auth state otherwise
+      // For now, we rely on the admin layout's useEffect to handle redirection or rendering
     } else {
       toast({
         title: 'Login Failed',
