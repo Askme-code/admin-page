@@ -1,17 +1,15 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 import { MountainSnow } from 'lucide-react';
-
-const ADMIN_EMAIL = "kimumilangali@gmail.com";
-const ADMIN_PASSWORD = "Milla@24";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,30 +18,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/admin');
+      }
+    };
+    checkSession();
+  }, [router]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
 
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      localStorage.setItem('isAdminLoggedIn', 'true');
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: 'Login Failed',
+        description: error.message || 'Invalid email or password.',
+        variant: 'destructive',
+      });
+    } else {
       toast({
         title: 'Login Successful',
         description: 'Redirecting to admin dashboard...',
       });
       router.push('/admin');
-      // router.refresh() might be needed if layout doesn't re-evaluate auth state otherwise
-      // For now, we rely on the admin layout's useEffect to handle redirection or rendering
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password.',
-        variant: 'destructive',
-      });
+      // router.refresh() can be useful to ensure server components re-fetch data if needed
+      // but for basic auth redirect, push is usually sufficient.
     }
-    setIsLoading(false);
   };
 
   return (
@@ -88,7 +99,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-xs text-muted-foreground">
-          <p>For authorized personnel only.</p>
+          <p>Use your Supabase credentials.</p>
         </CardFooter>
       </Card>
     </div>

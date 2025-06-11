@@ -16,6 +16,7 @@ import {
 import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 const adminNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -30,14 +31,23 @@ export default function AdminSidebar() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAdminLoggedIn');
-    toast({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
-    });
-    router.push('/login');
-    // No need to call router.refresh() here, the AdminLayout will handle the redirect if an admin page is visited again.
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: 'Logout Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login'); 
+      // router.refresh() is good to ensure server components clear out user-specific data
+      // but onAuthStateChange in AdminLayout should also handle the redirect.
+    }
   };
 
   return (
@@ -83,7 +93,7 @@ export default function AdminSidebar() {
                 <SidebarMenuButton 
                     tooltip="Logout" 
                     className="hover:bg-destructive/20 hover:text-destructive data-[active=true]:bg-destructive/20 data-[active=true]:text-destructive"
-                    onClick={handleLogout} // Direct onClick handler for the button
+                    onClick={handleLogout}
                 >
                     <LogOut />
                     <span>Logout</span>

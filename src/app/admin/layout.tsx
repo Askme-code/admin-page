@@ -6,6 +6,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/lib/supabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 export default function AdminLayout({
   children,
@@ -14,23 +16,46 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined); // undefined initially
+  const [session, setSession] = useState<Session | null | undefined>(undefined); // undefined: loading, null: no session, Session: active session
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This check runs only on the client-side after hydration
-    const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
-    if (isAdminLoggedIn === 'true') {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-      if (pathname !== '/login') { 
+    const getSession = async () => {
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error getting session:", error);
+        setSession(null);
+      } else {
+        setSession(currentSession);
+      }
+      setIsLoading(false);
+    };
+
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      if (event === 'SIGNED_OUT' && pathname.startsWith('/admin')) {
         router.push('/login');
       }
-    }
+      if (event === 'SIGNED_IN' && pathname === '/login') {
+        router.push('/admin');
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, [router, pathname]);
 
-  // Show loading skeleton until authentication status is determined
-  if (isAuthenticated === undefined) {
+  useEffect(() => {
+    if (!isLoading && !session && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [session, isLoading, pathname, router]);
+
+
+  if (isLoading || session === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="space-y-4 p-8">
@@ -42,13 +67,17 @@ export default function AdminLayout({
     );
   }
 
-  // If on login page, just render children (the login page itself)
   if (pathname === '/login') {
-      return <>{children}</>;
+    // If there's a session and user is on login, redirect to admin
+    // Otherwise, show login page (handled by login page's own useEffect)
+    if (session) {
+         router.push('/admin'); // Should be caught by effect, but good to have defensive redirect
+         return null; // Or loading while redirecting
+    }
+    return <>{children}</>;
   }
   
-  // If authenticated and not on login page, render admin layout
-  if (isAuthenticated) {
+  if (session) {
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-screen bg-background">
@@ -61,8 +90,8 @@ export default function AdminLayout({
     );
   }
   
-  // Fallback: If not authenticated and not on login page, this part should ideally not be reached
-  // due to the redirect in useEffect. However, as a safeguard, return null or a minimal message.
-  // This also handles the brief period before redirection.
+  // This case should ideally be handled by the redirect in useEffect.
+  // If user is not on /login, not loading, and no session, they should be redirected.
+  // Returning null here prevents rendering admin content before redirect.
   return null; 
 }
