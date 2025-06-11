@@ -19,7 +19,6 @@ export default function NewDestinationPage() {
         { 
           ...values,
           featured_image: values.featured_image || null,
-          image: values.image || null,
           location: values.location || null,
           highlights: values.highlights || [],
         }

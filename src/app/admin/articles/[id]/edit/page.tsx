@@ -55,7 +55,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           ...values, 
           excerpt: values.excerpt || null,
           featured_image: values.featured_image || null,
-          image: values.image || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', params.id);

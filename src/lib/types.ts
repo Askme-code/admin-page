@@ -2,57 +2,50 @@
 export interface Article {
   id: string;
   title: string;
-  slug: string;
   content: string;
   excerpt?: string;
   category: string;
   featured_image?: string;
-  image?: string; // New field
   status: 'draft' | 'published';
-  author: string; // Could be a user ID or name
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  author: string; 
+  created_at: string; 
+  updated_at: string; 
 }
 
 export interface Destination {
   id: string;
   name: string;
-  slug: string;
   description: string;
   featured_image?: string;
-  image?: string; // New field
-  location?: string; // e.g., "Serengeti National Park" or GPS coordinates
+  location?: string; 
   highlights?: string[];
   status: 'draft' | 'published';
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  created_at: string; 
+  updated_at: string; 
 }
 
 export interface Event {
   id: string;
   title: string;
-  slug: string; // Added for URL generation
   description: string;
-  event_date: string; // ISO date string
+  event_date: string; 
   location: string;
   featured_image?: string;
-  image?: string; // New field
   status: 'draft' | 'published';
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  created_at: string; 
+  updated_at: string; 
 }
 
 export interface TravelTip {
   id: string;
   title: string;
-  slug: string; // Added for URL generation
   content: string;
-  icon: string; // Suggests a specific icon name (e.g., from Lucide)
-  category: string; // e.g., "Safety", "Packing", "Culture"
-  image?: string; // New field
+  icon: string; 
+  category: string; 
+  featured_image?: string; // Changed from 'image' to 'featured_image' for consistency, assuming this was the intent for tips as well
   status: 'draft' | 'published';
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  created_at: string; 
+  updated_at: string; 
 }
 
 export interface NavItem {

@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ async function getFeaturedData() {
     .from('destinations')
     .select('*')
     .eq('status', 'published')
-    .order('created_at', { ascending: false }) // Or some other metric for "popular"
+    .order('created_at', { ascending: false }) 
     .limit(1)
     .maybeSingle();
 
@@ -30,7 +31,7 @@ async function getFeaturedData() {
     .from('events')
     .select('*')
     .eq('status', 'published')
-    .order('event_date', { ascending: true }) // Upcoming
+    .order('event_date', { ascending: true }) 
     .limit(1)
     .maybeSingle();
 
@@ -122,7 +123,7 @@ export default async function HomePage() {
                     </CardContent>
                     <CardFooter>
                       <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                        <Link href={`/articles/${featuredArticle.slug}`}>Read More <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href={`/articles/${featuredArticle.id}`}>Read More <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                     </CardFooter>
                   </div>
@@ -158,7 +159,7 @@ export default async function HomePage() {
                     </CardContent>
                     <CardFooter>
                        <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                        <Link href={`/destinations/${popularDestination.slug}`}>Learn More <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href={`/destinations/${popularDestination.id}`}>Learn More <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                     </CardFooter>
                   </div>
@@ -201,7 +202,7 @@ export default async function HomePage() {
                     </CardContent>
                      <CardFooter>
                        <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0">
-                        <Link href={`/events/${upcomingEvent.slug}`}>Event Details <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href={`/events/${upcomingEvent.id}`}>Event Details <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                     </CardFooter>
                   </div>

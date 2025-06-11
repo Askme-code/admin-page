@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Article } from '@/lib/types';
@@ -25,7 +26,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       )}
       <CardHeader>
         <CardTitle className="font-headline text-xl leading-tight">
-          <Link href={`/articles/${article.slug}`} className="hover:text-primary transition-colors">
+          <Link href={`/articles/${article.id}`} className="hover:text-primary transition-colors">
             {article.title}
           </Link>
         </CardTitle>
@@ -47,7 +48,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       </CardContent>
       <CardFooter>
         <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0 text-sm">
-          <Link href={`/articles/${article.slug}`}>Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          <Link href={`/articles/${article.id}`}>Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
         </Button>
       </CardFooter>
     </Card>

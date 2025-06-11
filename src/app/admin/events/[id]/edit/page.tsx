@@ -54,7 +54,6 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
           ...values,
           event_date: values.event_date.toISOString(),
           featured_image: values.featured_image || null,
-          image: values.image || null,
           updated_at: new Date().toISOString(), 
         })
         .eq('id', params.id);

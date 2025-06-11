@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Event } from '@/lib/types';
@@ -25,7 +26,7 @@ export default function EventCard({ event }: EventCardProps) {
       )}
       <CardHeader>
         <CardTitle className="font-headline text-xl leading-tight">
-          <Link href={`/events/${event.slug}`} className="hover:text-primary transition-colors">
+          <Link href={`/events/${event.id}`} className="hover:text-primary transition-colors">
             {event.title}
           </Link>
         </CardTitle>
@@ -47,7 +48,7 @@ export default function EventCard({ event }: EventCardProps) {
       </CardContent>
       <CardFooter>
         <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0 text-sm">
-          <Link href={`/events/${event.slug}`}>View Details <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          <Link href={`/events/${event.id}`}>View Details <ArrowRight className="ml-1 h-4 w-4" /></Link>
         </Button>
       </CardFooter>
     </Card>

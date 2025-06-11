@@ -54,7 +54,6 @@ export default function EditDestinationPage({ params }: { params: { id: string }
         .update({ 
           ...values,
           featured_image: values.featured_image || null,
-          image: values.image || null,
           location: values.location || null,
           highlights: values.highlights || [],
           updated_at: new Date().toISOString(), 

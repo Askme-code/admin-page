@@ -21,7 +21,6 @@ export default function NewArticlePage() {
           ...values,
           excerpt: values.excerpt || null,
           featured_image: values.featured_image || null,
-          image: values.image || null, 
         }
       ]);
 

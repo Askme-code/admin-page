@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Destination } from '@/lib/types';
@@ -25,7 +26,7 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
       )}
       <CardHeader>
         <CardTitle className="font-headline text-xl leading-tight">
-          <Link href={`/destinations/${destination.slug}`} className="hover:text-primary transition-colors">
+          <Link href={`/destinations/${destination.id}`} className="hover:text-primary transition-colors">
             {destination.name}
           </Link>
         </CardTitle>
@@ -43,7 +44,7 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
       </CardContent>
       <CardFooter>
         <Button asChild variant="link" className="text-primary hover:text-primary/80 px-0 text-sm">
-          <Link href={`/destinations/${destination.slug}`}>Explore <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          <Link href={`/destinations/${destination.id}`}>Explore <ArrowRight className="ml-1 h-4 w-4" /></Link>
         </Button>
       </CardFooter>
     </Card>

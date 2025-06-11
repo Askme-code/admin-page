@@ -20,7 +20,6 @@ export default function NewEventPage() {
           ...values,
           event_date: values.event_date.toISOString(), 
           featured_image: values.featured_image || null,
-          image: values.image || null,
         }
       ]);
 

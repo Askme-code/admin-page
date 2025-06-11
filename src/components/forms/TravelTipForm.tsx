@@ -22,11 +22,10 @@ import { useRouter } from "next/navigation";
 
 export const travelTipSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
-  slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   content: z.string().min(10, { message: "Content is too short." }),
   icon: z.string().min(1, { message: "Icon name is required." }), 
   category: z.string().min(1, { message: "Category is required." }),
-  image: z.string().url({ message: "Please enter a valid URL for the image." }).optional().or(z.literal('')),
+  featured_image: z.string().url({ message: "Please enter a valid URL for the image." }).optional().or(z.literal('')),
   status: z.enum(["draft", "published"]),
 });
 
@@ -43,14 +42,13 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
     resolver: zodResolver(travelTipSchema),
     defaultValues: initialData ? {
       ...initialData,
-      image: initialData.image || '',
+      featured_image: initialData.featured_image || '',
     } : {
       title: "",
-      slug: "",
       content: "",
       icon: "",
       category: "",
-      image: "",
+      featured_image: "",
       status: "draft",
     },
   });
@@ -73,20 +71,6 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
               <FormControl>
                 <Input placeholder="Travel tip title" {...field} disabled={isLoading} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="slug"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Slug</FormLabel>
-              <FormControl>
-                <Input placeholder="travel-tip-slug" {...field} disabled={isLoading} />
-              </FormControl>
-              <FormDescription>URL-friendly version of the title.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -133,14 +117,14 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
         />
         <FormField
           control={form.control}
-          name="image"
+          name="featured_image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Additional Image URL (Optional)</FormLabel>
+              <FormLabel>Image URL (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="https://example.com/tip-image.png" {...field} value={field.value ?? ""} rows={3} disabled={isLoading}/>
+                <Input type="url" placeholder="https://example.com/tip-image.png" {...field} value={field.value ?? ""} disabled={isLoading}/>
               </FormControl>
-              <FormDescription>Enter a valid URL for the additional image.</FormDescription>
+              <FormDescription>Enter a valid URL for an image to display with the tip.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

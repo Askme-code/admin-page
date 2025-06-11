@@ -18,7 +18,7 @@ export default function NewTravelTipPage() {
       const { error } = await supabase.from('travel_tips').insert([
         { 
           ...values,
-          image: values.image || null,
+          featured_image: values.featured_image || null,
         }
       ]);
 

@@ -52,7 +52,7 @@ export default function EditTravelTipPage({ params }: { params: { id: string } }
         .from('travel_tips')
         .update({ 
           ...values,
-          image: values.image || null,
+          featured_image: values.featured_image || null,
           updated_at: new Date().toISOString(), 
         })
         .eq('id', params.id);

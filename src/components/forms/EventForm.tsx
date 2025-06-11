@@ -27,12 +27,10 @@ import { useRouter } from "next/navigation";
 
 export const eventSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
-  slug: z.string().min(3, { message: "Slug must be at least 3 characters." }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: "Slug must be lowercase alphanumeric with hyphens." }),
   description: z.string().min(10, { message: "Description is too short." }),
   event_date: z.date({ required_error: "Event date is required." }),
   location: z.string().min(1, { message: "Location is required." }),
   featured_image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-  image: z.string().url({ message: "Please enter a valid URL for the image." }).optional().or(z.literal('')),
   status: z.enum(["draft", "published"]),
 });
 
@@ -51,15 +49,12 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
       ...initialData,
       event_date: new Date(initialData.event_date), 
       featured_image: initialData.featured_image || '',
-      image: initialData.image || '',
     } : {
       title: "",
-      slug: "",
       description: "",
       event_date: new Date(),
       location: "",
       featured_image: "",
-      image: "",
       status: "draft",
     },
   });
@@ -82,20 +77,6 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
               <FormControl>
                 <Input placeholder="Event title" {...field} disabled={isLoading} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="slug"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Slug</FormLabel>
-              <FormControl>
-                <Input placeholder="event-slug" {...field} disabled={isLoading} />
-              </FormControl>
-              <FormDescription>URL-friendly version of the title.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -175,20 +156,6 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
               <FormControl>
                 <Input type="url" placeholder="https://example.com/featured-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Additional Image URL (Optional)</FormLabel>
-              <FormControl>
-                <Textarea placeholder="https://example.com/additional-image.png" {...field} value={field.value ?? ""} rows={3} disabled={isLoading} />
-              </FormControl>
-              <FormDescription>Enter a valid URL for the additional image.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
