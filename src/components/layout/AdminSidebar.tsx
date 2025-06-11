@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
   SidebarHeader,
@@ -12,9 +13,9 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const adminNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -26,6 +27,18 @@ const adminNavItems: NavItem[] = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAdminLoggedIn');
+    toast({
+      title: 'Logged Out',
+      description: 'You have been successfully logged out.',
+    });
+    router.push('/login');
+    router.refresh(); // Force refresh to ensure state is cleared
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
@@ -67,9 +80,14 @@ export default function AdminSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Logout" className="hover:bg-destructive/20 hover:text-destructive data-[active=true]:bg-destructive/20 data-[active=true]:text-destructive">
-                    {/* Replace with actual logout logic */}
-                    <button onClick={() => alert('Logout clicked')}>
+                <SidebarMenuButton 
+                    asChild 
+                    tooltip="Logout" 
+                    className="hover:bg-destructive/20 hover:text-destructive data-[active=true]:bg-destructive/20 data-[active=true]:text-destructive"
+                    onClick={handleLogout}
+                >
+                    {/* Button element used directly for onClick */}
+                    <button>
                         <LogOut />
                         <span>Logout</span>
                     </button>
