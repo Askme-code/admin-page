@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -41,7 +42,7 @@ export default function AdminTravelTipsPage() {
       setLoading(false);
     };
     fetchTravelTips();
-  }, [toast]);
+  }, []); // Changed [toast] to []
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this travel tip?")) {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -35,8 +36,8 @@ export default function AdminEventsPage() {
       setLoading(false);
     };
     fetchEvents();
-  }, [toast]);
-
+  }, []); // Changed [toast] to []
+  
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       const { error } = await supabase.from('events').delete().eq('id', id);

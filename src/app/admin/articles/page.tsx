@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -34,7 +35,7 @@ export default function AdminArticlesPage() {
       setLoading(false);
     };
     fetchArticles();
-  }, [toast]);
+  }, []); // Changed [toast] to []
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
