@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import type { Article, Destination, Event } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import AdSenseUnit from '@/components/ads/AdSenseUnit';
 
 async function getFeaturedData() {
   const articlePromise = supabase
@@ -211,6 +212,16 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        {/* ADVERTISEMENT SECTION */}
+        <section className="py-8 bg-background">
+          <div className="container">
+            <AdSenseUnit
+                adClient="ca-pub-5805028999017949"
+                adSlot="8226629286"
+              />
+          </div>
+        </section>
 
         {/* Travel Tips Teaser */}
         <section className="py-16 bg-primary/10">

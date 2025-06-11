@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
 import Link from 'next/link';
+import AdSenseUnit from '@/components/ads/AdSenseUnit';
 
 export async function generateStaticParams() {
   const { data: articles, error } = await supabase
@@ -95,6 +96,14 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
               className="prose prose-lg max-w-none prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80 prose-img:rounded-md prose-img:shadow-md"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
+
+            {/* AdSense Ad Unit */}
+            <div className="my-8 text-center">
+              <AdSenseUnit
+                adClient="ca-pub-5805028999017949"
+                adSlot="8226629286"
+              />
+            </div>
           </article>
         </div>
       </main>
