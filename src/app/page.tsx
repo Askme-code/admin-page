@@ -14,6 +14,7 @@ import { isValidFeaturedImageUrl } from '@/lib/utils';
 import { FeedbackForm } from '@/components/forms/FeedbackForm';
 import { PublicReviewForm } from '@/components/forms/PublicReviewForm';
 import TestimonialCard from '@/components/cards/TestimonialCard';
+import ImageSlideshow from '@/components/ui/image-slideshow';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,13 +64,13 @@ async function getHomepageData() {
     destinationResult, 
     eventResult, 
     featuredReviewsResult,
-    allPublishedReviewsResult
+    allPublishedReviewsPromiseResult, // Corrected variable name here
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
-    allPublishedReviewsPromise,
+    allPublishedReviewsPromise, // Corrected promise passed here
   ]);
 
   return {
@@ -77,8 +78,8 @@ async function getHomepageData() {
     popularDestination: destinationResult.data as Destination | null,
     upcomingEvent: eventResult.data as Event | null,
     featuredTestimonials: featuredReviewsResult.data as UserReview[] | null,
-    allPublishedReviews: allPublishedReviewsResult.data as UserReview[] | null,
-    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsResult.error,
+    allPublishedReviews: allPublishedReviewsPromiseResult.data as UserReview[] | null, // Use the result here
+    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsPromiseResult.error,
   };
 }
 
@@ -97,8 +98,14 @@ export default async function HomePage() {
     console.error("[ Server ] Error fetching data for homepage:", error);
   }
 
-  // Changed to a local path. User needs to add this image to public/images/
-  const heroImageUrl = "/images/hero-tanzania-landscape-1920x1080.png";
+  const slideShowImages = [
+    '/images/bg1.jpg',
+    '/images/bg2.jpg',
+    '/images/bg3.jpg',
+    '/images/bg4.jpg',
+    '/images/bg5.jpg',
+    '/images/bg6.jpg',
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -106,14 +113,10 @@ export default async function HomePage() {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex items-center justify-center text-primary-foreground py-12 md:py-24">
-          <Image 
-            src={heroImageUrl}
-            alt="Tanzania Landscape" 
-            layout="fill" 
-            objectFit="cover" 
-            className="absolute inset-0 z-0 opacity-30"
-            data-ai-hint="Tanzania landscape"
-            priority
+          <ImageSlideshow 
+            images={slideShowImages} 
+            className="absolute inset-0 z-0"
+            activeImageOpacity={0.3} // Controls the opacity of the visible slide
           />
           <div className="container text-center z-10">
             <h1 className="font-headline text-4xl md:text-6xl font-bold mb-6 animate-fade-in-down">Welcome to Tanzania!</h1>
@@ -354,3 +357,4 @@ export default async function HomePage() {
     
 
     
+
