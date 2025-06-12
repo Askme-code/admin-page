@@ -13,7 +13,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home } from 'lucide-react';
+import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home, MessageSquareText } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -24,6 +24,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Destinations', href: '/admin/destinations', icon: Map },
   { title: 'Events', href: '/admin/events', icon: CalendarClock },
   { title: 'Travel Tips', href: '/admin/travel-tips', icon: Lightbulb },
+  { title: 'User Feedback', href: '/admin/feedback', icon: MessageSquareText },
 ];
 
 export default function AdminSidebar() {
@@ -45,8 +46,6 @@ export default function AdminSidebar() {
         description: 'You have been successfully logged out.',
       });
       router.push('/login'); 
-      // router.refresh() is good to ensure server components clear out user-specific data
-      // but onAuthStateChange in AdminLayout should also handle the redirect.
     }
   };
 

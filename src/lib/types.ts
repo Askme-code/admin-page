@@ -42,7 +42,7 @@ export interface TravelTip {
   content: string;
   icon: string; 
   category: string; 
-  featured_image?: string; // Changed from 'image' to 'featured_image' for consistency, assuming this was the intent for tips as well
+  featured_image?: string; 
   status: 'draft' | 'published';
   created_at: string; 
   updated_at: string; 
@@ -53,4 +53,14 @@ export interface NavItem {
   href: string;
   icon?: React.ElementType;
   disabled?: boolean;
+}
+
+export interface UserFeedback {
+  id: string;
+  full_name: string;
+  email: string;
+  interest_area?: string | null;
+  referral_source?: string | null;
+  message: string;
+  created_at: string;
 }
