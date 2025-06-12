@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge'; // Status badge no longer used
 import { PlusCircle, Edit, Trash2, Star } from 'lucide-react';
 import type { UserReview } from '@/lib/types';
 import { useState, useEffect } from 'react';
@@ -85,9 +85,9 @@ export default function AdminReviewsPage() {
               <TableHead className="w-[10%]">Image</TableHead>
               <TableHead className="w-[20%]">Full Name</TableHead>
               <TableHead className="w-[10%]">Rating</TableHead>
-              <TableHead className="w-[30%]">Review (Excerpt)</TableHead>
-              <TableHead className="w-[10%]">Status</TableHead>
-              <TableHead className="w-[10%]">Created At</TableHead>
+              <TableHead className="w-[35%]">Review (Excerpt)</TableHead>
+              {/* <TableHead className="w-[10%]">Status</TableHead> Removed Status Column */}
+              <TableHead className="w-[15%]">Created At</TableHead>
               <TableHead className="text-right w-[10%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,11 +115,13 @@ export default function AdminReviewsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">{review.review.substring(0, 100)}{review.review.length > 100 ? '...' : ''}</TableCell>
+                  {/* Status Cell Removed 
                   <TableCell>
                     <Badge variant={review.status === 'published' ? 'default' : (review.status === 'pending' ? 'secondary' : 'destructive')}>
-                      {review.status}
+                      {review.status || 'N/A'}
                     </Badge>
                   </TableCell>
+                  */}
                   <TableCell>{format(new Date(review.created_at), "PP")}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" asChild className="mr-2 hover:text-primary">
@@ -135,7 +137,7 @@ export default function AdminReviewsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24">
+                <TableCell colSpan={6} className="text-center h-24"> {/* Adjusted colSpan */}
                   No reviews found.
                 </TableCell>
               </TableRow>

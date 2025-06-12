@@ -13,11 +13,13 @@ export default function NewReviewPage() {
 
   const handleSubmit = async (values: ReviewSubmitData) => {
     try {
+      // Values no longer includes status
       const { error } = await supabase.from('user_reviews').insert([
         { 
           ...values,
           location: values.location || null,
           image_url: values.image_url || null,
+          // status is not sent as it's removed from ReviewSubmitData
         }
       ]);
 

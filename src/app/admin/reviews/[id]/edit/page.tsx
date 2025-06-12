@@ -25,6 +25,8 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
 
     const fetchReview = async () => {
       setLoading(true);
+      // Select query no longer needs to explicitly fetch status if it doesn't exist,
+      // but UserReview type now has status as optional.
       const { data, error } = await supabase
         .from('user_reviews')
         .select('*')
@@ -35,7 +37,7 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
         toast({ title: "Error fetching review", description: error.message, variant: "destructive" });
         setReview(null);
       } else {
-        setReview(data as UserReview); // Cast as UserReview
+        setReview(data as UserReview);
       }
       setLoading(false);
     };
@@ -46,14 +48,17 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
   const handleSubmit = async (values: ReviewSubmitData) => {
     if (!params.id) return;
     try {
+      // Values no longer includes status
+      const updateData: Omit<ReviewSubmitData, 'status'> & { updated_at: string } = {
+        ...values,
+        location: values.location || null,
+        image_url: values.image_url || null,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('user_reviews')
-        .update({ 
-          ...values, 
-          location: values.location || null,
-          image_url: values.image_url || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', params.id);
 
       if (error) {
@@ -76,17 +81,18 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
     return <div className="container py-8">Review not found or error loading. <Link href="/admin/reviews" className="text-primary hover:underline">Go back</Link></div>;
   }
   
-  // Ensure rating is a number for the form if it comes as string from DB (though it should be int)
   const initialFormData = {
     ...review,
-    rating: Number(review.rating)
+    rating: Number(review.rating),
+    // status is removed from the form, so no need to pass it to initialData for the form
   };
 
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-headline font-semibold">Edit Review</h1>
-      <ReviewForm initialData={initialFormData} onSubmit={handleSubmit} />
+      {/* The ReviewForm no longer manages the status field */}
+      <ReviewForm initialData={initialFormData as UserReview /* Cast as UserReview, status is now optional */} onSubmit={handleSubmit} />
     </div>
   );
 }

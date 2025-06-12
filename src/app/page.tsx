@@ -45,9 +45,9 @@ async function getFeaturedData() {
   const reviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    .eq('status', 'published')
+    // .eq('status', 'published') // Temporarily removed status filter
     .order('created_at', { ascending: false })
-    .limit(3); // Fetch 3 latest published reviews
+    .limit(3);
 
   const [articleResult, destinationResult, eventResult, reviewsResult] = await Promise.all([
     articlePromise,

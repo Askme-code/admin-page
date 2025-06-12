@@ -73,7 +73,7 @@ export interface UserReview {
   review: string;
   location?: string;
   image_url?: string; // URL of the reviewer's image from Supabase Storage
-  status: 'pending' | 'published' | 'rejected';
+  status?: 'pending' | 'published' | 'rejected'; // Made optional
   created_at: string;
-  updated_at: string;
+  updated_at?: string; // Made optional
 }

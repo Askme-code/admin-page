@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const SUPABASE_BUCKET_NAME = 'contentimage'; // Using the established bucket
+const SUPABASE_BUCKET_NAME = 'contentimage';
 
 export const reviewFormSchema = z.object({
   full_name: z.string().min(2, { message: "Full name must be at least 2 characters." }),
@@ -37,7 +37,7 @@ export const reviewFormSchema = z.object({
     .optional()
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), '.jpg, .jpeg, .png, .webp, .gif files are accepted.'),
-  status: z.enum(["pending", "published", "rejected"]),
+  // status: z.enum(["pending", "published", "rejected"]), // Status field removed
 })
 .refine(data => !(data.image_url_field && data.image_file_field), {
   message: "Provide either an image URL or an image file, not both.",
@@ -53,7 +53,7 @@ export type ReviewSubmitData = {
   review: string;
   location?: string;
   image_url?: string;
-  status: 'pending' | 'published' | 'rejected';
+  // status?: 'pending' | 'published' | 'rejected'; // Status field removed
 };
 
 interface ReviewFormProps {
@@ -69,12 +69,12 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
     defaultValues: {
       full_name: initialData?.full_name || "",
       email: initialData?.email || "",
-      rating: initialData?.rating || 3, // Default to 3 stars
+      rating: initialData?.rating || 3,
       review: initialData?.review || "",
       location: initialData?.location || "",
       image_url_field: initialData?.image_url || "",
       image_file_field: undefined,
-      status: initialData?.status || "pending",
+      // status: initialData?.status || "pending", // Status field removed
     },
   });
 
@@ -85,14 +85,14 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
 
     if (formValues.image_file_field) {
       const file = formValues.image_file_field;
-      const filePath = `reviews/${Date.now()}-${file.name}`; // Store in a 'reviews' subfolder
+      const filePath = `reviews/${Date.now()}-${file.name}`;
       try {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from(SUPABASE_BUCKET_NAME)
           .upload(filePath, file);
 
         if (uploadError) {
-          const description = typeof uploadError.message === 'string' ? uploadError.message : "Could not upload image. Check RLS policies or bucket settings.";
+          const description = typeof uploadError.message === 'string' && uploadError.message ? uploadError.message : "Could not upload image. Check RLS policies or bucket settings.";
           toast({ title: "Image Upload Error", description, variant: "destructive" });
           return;
         }
@@ -120,7 +120,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
       review: formValues.review,
       location: formValues.location || undefined,
       image_url: finalImageUrl || undefined,
-      status: formValues.status,
+      // status: formValues.status, // Status field removed
     };
     await onSubmit(dataToSubmit);
   };
@@ -243,6 +243,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
             </FormItem>
           )}
         />
+        {/* Status Field Removed
         <FormField
           control={form.control}
           name="status"
@@ -265,6 +266,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
             </FormItem>
           )}
         />
+        */}
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (initialData ? "Saving..." : "Creating...") : (initialData ? "Save Changes" : "Create Review")}
