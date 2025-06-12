@@ -38,9 +38,9 @@ export default function Footer() {
         <div className="mb-8">
           <p className="text-base font-semibold text-foreground mb-4">Connect with Milangali Kimu</p>
           <div className="flex justify-center items-center gap-x-3 sm:gap-x-4">
-            {socialLinks.map((link) => (
-              <TooltipProvider key={link.name}>
-                <Tooltip>
+            <TooltipProvider>
+              {socialLinks.map((link) => (
+                <Tooltip key={link.name}>
                   <TooltipTrigger asChild>
                     <a
                       href={link.href}
@@ -56,8 +56,8 @@ export default function Footer() {
                     <p>{link.label}</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            ))}
+              ))}
+            </TooltipProvider>
           </div>
         </div>
 
