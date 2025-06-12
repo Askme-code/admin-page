@@ -29,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const SUPABASE_BUCKET_NAME = 'content_images';
+const SUPABASE_BUCKET_NAME = 'contentimage';
 
 export const eventFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
