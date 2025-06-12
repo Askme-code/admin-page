@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-// import { Badge } from '@/components/ui/badge'; // Status badge no longer used
-import { PlusCircle, Edit, Trash2, Star } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Edit, Trash2, Star, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 import type { UserReview } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -20,22 +20,23 @@ export default function AdminReviewsPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('user_reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const fetchReviews = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('user_reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        toast({ title: "Error fetching reviews", description: error.message, variant: "destructive" });
-        console.error("Error fetching reviews:", error);
-      } else {
-        setReviews(data || []);
-      }
-      setLoading(false);
-    };
+    if (error) {
+      toast({ title: "Error fetching reviews", description: error.message, variant: "destructive" });
+      console.error("Error fetching reviews:", error);
+    } else {
+      setReviews(data || []);
+    }
+    setLoading(false);
+  };
+  
+  useEffect(() => {
     fetchReviews();
   }, []);
 
@@ -50,6 +51,21 @@ export default function AdminReviewsPage() {
       }
     }
   };
+
+  const handleStatusChange = async (id: string, newStatus: UserReview['status']) => {
+    const { error } = await supabase
+      .from('user_reviews')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: "Error updating status", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Review status updated." });
+      fetchReviews(); // Re-fetch to show updated status
+    }
+  };
+
 
   if (loading) {
     return (
@@ -82,13 +98,13 @@ export default function AdminReviewsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[10%]">Image</TableHead>
-              <TableHead className="w-[20%]">Full Name</TableHead>
-              <TableHead className="w-[10%]">Rating</TableHead>
-              <TableHead className="w-[35%]">Review (Excerpt)</TableHead>
-              {/* <TableHead className="w-[10%]">Status</TableHead> Removed Status Column */}
-              <TableHead className="w-[15%]">Created At</TableHead>
-              <TableHead className="text-right w-[10%]">Actions</TableHead>
+              <TableHead className="w-[8%]">Image</TableHead>
+              <TableHead className="w-[15%]">Full Name</TableHead>
+              <TableHead className="w-[8%]">Rating</TableHead>
+              <TableHead className="w-[25%]">Review (Excerpt)</TableHead>
+              <TableHead className="w-[12%]">Status</TableHead>
+              <TableHead className="w-[12%]">Created At</TableHead>
+              <TableHead className="text-right w-[20%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -115,16 +131,35 @@ export default function AdminReviewsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">{review.review.substring(0, 100)}{review.review.length > 100 ? '...' : ''}</TableCell>
-                  {/* Status Cell Removed 
                   <TableCell>
-                    <Badge variant={review.status === 'published' ? 'default' : (review.status === 'pending' ? 'secondary' : 'destructive')}>
-                      {review.status || 'N/A'}
+                    <Badge 
+                      variant={
+                        review.status === 'published' ? 'default' : 
+                        (review.status === 'pending' ? 'secondary' : 'destructive')
+                      }
+                      className="capitalize"
+                    >
+                      {review.status}
                     </Badge>
                   </TableCell>
-                  */}
                   <TableCell>{format(new Date(review.created_at), "PP")}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" asChild className="mr-2 hover:text-primary">
+                  <TableCell className="text-right space-x-1">
+                    {review.status !== 'published' && (
+                       <Button variant="ghost" size="icon" className="hover:text-green-500" title="Publish" onClick={() => handleStatusChange(review.id, 'published')}>
+                        <CheckCircle2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {review.status === 'published' && (
+                       <Button variant="ghost" size="icon" className="hover:text-yellow-500" title="Unpublish (set to pending)" onClick={() => handleStatusChange(review.id, 'pending')}>
+                        <EyeOff className="h-4 w-4" />
+                      </Button>
+                    )}
+                     {review.status !== 'rejected' && (
+                       <Button variant="ghost" size="icon" className="hover:text-red-500" title="Reject" onClick={() => handleStatusChange(review.id, 'rejected')}>
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" asChild className="hover:text-primary">
                       <Link href={`/admin/reviews/${review.id}/edit`}>
                         <Edit className="h-4 w-4" />
                       </Link>
@@ -137,7 +172,7 @@ export default function AdminReviewsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24"> {/* Adjusted colSpan */}
+                <TableCell colSpan={7} className="text-center h-24">
                   No reviews found.
                 </TableCell>
               </TableRow>

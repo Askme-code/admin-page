@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart, Quote } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart, Quote, Send } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
@@ -12,12 +12,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
 import { isValidFeaturedImageUrl } from '@/lib/utils';
 import { FeedbackForm } from '@/components/forms/FeedbackForm';
+import { PublicReviewForm } from '@/components/forms/PublicReviewForm';
 import TestimonialCard from '@/components/cards/TestimonialCard';
-
 
 export const dynamic = 'force-dynamic';
 
-async function getFeaturedData() {
+async function getHomepageData() {
   const articlePromise = supabase
     .from('articles')
     .select('*')
@@ -42,39 +42,62 @@ async function getFeaturedData() {
     .limit(1)
     .maybeSingle();
 
-  const reviewsPromise = supabase
+  // Fetch a few testimonials (e.g., hand-picked or most recent published)
+  const featuredReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    // .eq('status', 'published') // Temporarily removed status filter
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(3);
+  
+  // Fetch all published reviews for broader display
+  const allPublishedReviewsPromise = supabase
+    .from('user_reviews')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
 
-  const [articleResult, destinationResult, eventResult, reviewsResult] = await Promise.all([
+
+  const [
+    articleResult, 
+    destinationResult, 
+    eventResult, 
+    featuredReviewsResult,
+    allPublishedReviewsResult
+  ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
-    reviewsPromise,
+    featuredReviewsPromise,
+    allPublishedReviewsPromise
   ]);
 
   return {
     featuredArticle: articleResult.data as Article | null,
     popularDestination: destinationResult.data as Destination | null,
     upcomingEvent: eventResult.data as Event | null,
-    testimonials: reviewsResult.data as UserReview[] | null,
-    error: articleResult.error || destinationResult.error || eventResult.error || reviewsResult.error,
+    featuredTestimonials: featuredReviewsResult.data as UserReview[] | null,
+    allPublishedReviews: allPublishedReviewsResult.data as UserReview[] | null,
+    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsResult.error,
   };
 }
 
 
 export default async function HomePage() {
-  const { featuredArticle, popularDestination, upcomingEvent, testimonials, error } = await getFeaturedData();
+  const { 
+    featuredArticle, 
+    popularDestination, 
+    upcomingEvent, 
+    featuredTestimonials, 
+    allPublishedReviews,
+    error 
+  } = await getHomepageData();
 
   if (error) {
     console.error("Error fetching data for homepage:", error);
   }
 
   const heroImageUrl = isValidFeaturedImageUrl("https://placehold.co/1920x1080.png") || "https://placehold.co/1920x1080.png";
-
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -232,8 +255,8 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Testimonials Section */}
-        {testimonials && testimonials.length > 0 && (
+        {/* Testimonials Section (Featured) */}
+        {featuredTestimonials && featuredTestimonials.length > 0 && (
           <section className="py-16 bg-secondary/50">
             <div className="container">
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
@@ -242,13 +265,31 @@ export default async function HomePage() {
                 <Quote className="ml-3 h-8 w-8 text-accent" />
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {testimonials.map((review) => (
+                {featuredTestimonials.map((review) => (
                   <TestimonialCard key={review.id} review={review} />
                 ))}
               </div>
             </div>
           </section>
         )}
+        
+        {/* All Published Reviews Section */}
+        {allPublishedReviews && allPublishedReviews.length > 0 && (
+          <section id="community-reviews-section" className="py-16 bg-background">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Community Reviews</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {allPublishedReviews.map((review) => (
+                  <TestimonialCard key={review.id} review={review} />
+                ))}
+              </div>
+              {allPublishedReviews.length === 0 && (
+                 <p className="text-center text-muted-foreground">No community reviews yet. Be the first to share your experience!</p>
+              )}
+            </div>
+          </section>
+        )}
+
 
         {/* ADVERTISEMENT SECTION */}
         <section className="py-8 bg-background">
@@ -270,6 +311,22 @@ export default async function HomePage() {
             <Button size="lg" asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
               <Link href="/travel-tips">Get Tips <Users className="ml-2 h-5 w-5" /></Link>
             </Button>
+          </div>
+        </section>
+
+        {/* Public Review Form Section */}
+        <section id="submit-review-section" className="py-16 bg-secondary/30">
+          <div className="container max-w-2xl mx-auto">
+            <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
+              <Send className="mr-3 h-8 w-8 text-accent" />
+              Share Your Experience
+            </h2>
+            <p className="text-center text-muted-foreground mb-8">
+              Loved your trip to Tanzania? Help other travelers by sharing your review!
+            </p>
+            <Card className="shadow-lg p-6 md:p-8">
+              <PublicReviewForm />
+            </Card>
           </div>
         </section>
 

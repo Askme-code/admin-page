@@ -68,12 +68,12 @@ export interface UserFeedback {
 export interface UserReview {
   id: string;
   full_name: string;
-  email: string;
+  email: string; // For admin reference
   rating: number; // 1-5
   review: string;
   location?: string;
   image_url?: string; // URL of the reviewer's image from Supabase Storage
-  status?: 'pending' | 'published' | 'rejected'; // Made optional
+  status: 'pending' | 'published' | 'rejected';
   created_at: string;
-  updated_at?: string; // Made optional
+  updated_at: string; 
 }

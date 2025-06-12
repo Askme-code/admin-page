@@ -25,8 +25,6 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
 
     const fetchReview = async () => {
       setLoading(true);
-      // Select query no longer needs to explicitly fetch status if it doesn't exist,
-      // but UserReview type now has status as optional.
       const { data, error } = await supabase
         .from('user_reviews')
         .select('*')
@@ -48,8 +46,7 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
   const handleSubmit = async (values: ReviewSubmitData) => {
     if (!params.id) return;
     try {
-      // Values no longer includes status
-      const updateData: Omit<ReviewSubmitData, 'status'> & { updated_at: string } = {
+      const updateData = {
         ...values,
         location: values.location || null,
         image_url: values.image_url || null,
@@ -83,16 +80,13 @@ export default function EditReviewPage({ params }: { params: { id: string } }) {
   
   const initialFormData = {
     ...review,
-    rating: Number(review.rating),
-    // status is removed from the form, so no need to pass it to initialData for the form
+    rating: Number(review.rating), // Ensure rating is a number for the form
   };
-
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-headline font-semibold">Edit Review</h1>
-      {/* The ReviewForm no longer manages the status field */}
-      <ReviewForm initialData={initialFormData as UserReview /* Cast as UserReview, status is now optional */} onSubmit={handleSubmit} />
+      <ReviewForm initialData={initialFormData} onSubmit={handleSubmit} />
     </div>
   );
 }

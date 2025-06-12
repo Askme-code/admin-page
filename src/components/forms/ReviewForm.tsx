@@ -37,7 +37,7 @@ export const reviewFormSchema = z.object({
     .optional()
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), '.jpg, .jpeg, .png, .webp, .gif files are accepted.'),
-  // status: z.enum(["pending", "published", "rejected"]), // Status field removed
+  status: z.enum(["pending", "published", "rejected"]),
 })
 .refine(data => !(data.image_url_field && data.image_file_field), {
   message: "Provide either an image URL or an image file, not both.",
@@ -53,7 +53,7 @@ export type ReviewSubmitData = {
   review: string;
   location?: string;
   image_url?: string;
-  // status?: 'pending' | 'published' | 'rejected'; // Status field removed
+  status: 'pending' | 'published' | 'rejected';
 };
 
 interface ReviewFormProps {
@@ -74,7 +74,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
       location: initialData?.location || "",
       image_url_field: initialData?.image_url || "",
       image_file_field: undefined,
-      // status: initialData?.status || "pending", // Status field removed
+      status: initialData?.status || "pending",
     },
   });
 
@@ -85,7 +85,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
 
     if (formValues.image_file_field) {
       const file = formValues.image_file_field;
-      const filePath = `reviews/${Date.now()}-${file.name}`;
+      const filePath = `reviews/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
       try {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from(SUPABASE_BUCKET_NAME)
@@ -120,7 +120,7 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
       review: formValues.review,
       location: formValues.location || undefined,
       image_url: finalImageUrl || undefined,
-      // status: formValues.status, // Status field removed
+      status: formValues.status,
     };
     await onSubmit(dataToSubmit);
   };
@@ -243,7 +243,6 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
             </FormItem>
           )}
         />
-        {/* Status Field Removed
         <FormField
           control={form.control}
           name="status"
@@ -266,7 +265,6 @@ export function ReviewForm({ initialData, onSubmit }: ReviewFormProps) {
             </FormItem>
           )}
         />
-        */}
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (initialData ? "Saving..." : "Creating...") : (initialData ? "Save Changes" : "Create Review")}
