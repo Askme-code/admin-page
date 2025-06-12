@@ -46,16 +46,16 @@ async function getHomepageData() {
   // Fetch a few testimonials
   const featuredReviewsPromise = supabase
     .from('user_reviews')
+    // .eq('status', 'published') // Temporarily removed, re-add when DB 'status' column is confirmed
     .select('*')
-    // .eq('status', 'published') // Temporarily removed due to missing column, re-add when DB is updated
     .order('created_at', { ascending: false })
     .limit(3);
   
   // Fetch all reviews for broader display
   const allPublishedReviewsPromise = supabase
     .from('user_reviews')
+    // .eq('status', 'published') // Temporarily removed, re-add when DB 'status' column is confirmed
     .select('*')
-    // .eq('status', 'published') // Temporarily removed due to missing column, re-add when DB is updated
     .order('created_at', { ascending: false });
 
 
@@ -64,13 +64,13 @@ async function getHomepageData() {
     destinationResult, 
     eventResult, 
     featuredReviewsResult,
-    allPublishedReviewsPromiseResult, // Corrected variable name here
+    allPublishedReviewsPromiseResult, 
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
-    allPublishedReviewsPromise, // Corrected promise passed here
+    allPublishedReviewsPromise, 
   ]);
 
   return {
@@ -78,7 +78,7 @@ async function getHomepageData() {
     popularDestination: destinationResult.data as Destination | null,
     upcomingEvent: eventResult.data as Event | null,
     featuredTestimonials: featuredReviewsResult.data as UserReview[] | null,
-    allPublishedReviews: allPublishedReviewsPromiseResult.data as UserReview[] | null, // Use the result here
+    allPublishedReviews: allPublishedReviewsPromiseResult.data as UserReview[] | null, 
     error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsPromiseResult.error,
   };
 }
@@ -107,22 +107,31 @@ export default async function HomePage() {
     '/images/bg6.jpg',
   ];
 
+  const slideShowCaptions = [
+    "Experience Tanzania and the soul of Africa — where every sunrise tells a new story and every sunset leaves you breathless.",
+    "Welcome to Africa’s beating heart — from Tanzania’s mighty plains to the continent’s timeless rhythms.",
+    "Explore Tanzania, embrace Africa — a continent rich in spirit, wild beauty, and unforgettable journeys.",
+    "Africa calls, and Tanzania answers — with roaring wildlife, ancient cultures, and landscapes that touch the heavens.",
+    "From the snow-capped peaks of Kilimanjaro to the warmth of African hospitality, Tanzania is where dreams begin.",
+    "Roam the Serengeti, sail the Indian Ocean, and climb Africa’s tallest mountain — all in one Tanzanian adventure."
+  ];
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex items-center justify-center text-primary-foreground py-12 md:py-24">
+        <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex flex-col items-center justify-center text-primary-foreground py-12 md:py-24">
           <ImageSlideshow 
             images={slideShowImages} 
+            captions={slideShowCaptions}
             className="absolute inset-0 z-0"
-            activeImageOpacity={0.3} // Controls the opacity of the visible slide
+            activeImageOpacity={0.3}
+            captionClassName="z-10" 
           />
-          <div className="container text-center z-10">
-            <h1 className="font-headline text-4xl md:text-6xl font-bold mb-6 animate-fade-in-down">Welcome to Tanzania!</h1>
-            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up">
-              Your ultimate guide to exploring the breathtaking landscapes, vibrant cultures, and unforgettable adventures in Tanzania.
-            </p>
+          <div className="container text-center z-10 mt-auto pb-8 md:pb-12"> {/* Adjusted for button positioning */}
+            {/* Static Title and Subtitle are removed, captions are now in ImageSlideshow */}
             <Button size="lg" asChild className="animate-fade-in-up animation-delay-300">
               <Link href="/destinations">Explore Destinations <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
@@ -355,6 +364,3 @@ export default async function HomePage() {
   );
 }
     
-
-    
-

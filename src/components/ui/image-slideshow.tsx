@@ -8,18 +8,22 @@ import { cn } from "@/lib/utils";
 
 interface ImageSlideshowProps {
   images: (string | StaticImageData)[];
+  captions?: string[];
   interval?: number;
   className?: string;
   imageClassName?: string;
-  activeImageOpacity?: number; // Opacity for the visible image (0 to 1)
+  captionClassName?: string;
+  activeImageOpacity?: number; 
 }
 
 const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
   images,
-  interval = 5000, // Default to 5 seconds
+  captions,
+  interval = 5000, 
   className,
   imageClassName,
-  activeImageOpacity = 0.3, // Default to 0.3 for the hero section style
+  captionClassName,
+  activeImageOpacity = 0.3, 
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -36,6 +40,8 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
   if (!images || images.length === 0) {
     return null; 
   }
+
+  const currentCaption = captions && captions.length > currentIndex ? captions[currentIndex] : null;
 
   return (
     <div className={cn("relative w-full h-full overflow-hidden", className)}>
@@ -56,6 +62,22 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
           data-ai-hint="Tanzania landscape slideshow"
         />
       ))}
+      {currentCaption && (
+        <div 
+          className={cn(
+            "absolute inset-0 flex items-center justify-center p-4 transition-opacity duration-1000 ease-in-out",
+            captionClassName,
+            // This logic tries to show caption only when image is active
+            // However, for smoother transitions, we might want caption to fade with image or independently
+          )}
+          style={{ opacity: 1 }} // Caption is always part of the active slide conceptually
+        >
+          <p className="text-center text-xl md:text-3xl font-semibold text-primary-foreground"
+             style={{ textShadow: '0 0 5px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}>
+            {currentCaption}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
