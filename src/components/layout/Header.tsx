@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { title: 'Destinations', href: '/destinations' },
   { title: 'Events', href: '/events' },
   { title: 'Travel Tips', href: '/travel-tips' },
+  { title: 'Feedback', href: '/#feedback-section' },
   { title: 'Admin Panel', href: '/admin' },
 ];
 
@@ -51,9 +52,6 @@ export default function Header() {
                     Tanzania Trails
                   </Link>
                 </SheetTitle>
-                {/* <SheetDescription>
-                  Navigate through the wonders of Tanzania.
-                </SheetDescription> */}
               </SheetHeader>
               <nav className="grid gap-6 text-lg font-medium">
                 {navItems.map((item) => (

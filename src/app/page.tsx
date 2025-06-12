@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CalendarDays, MapPin, Users, Terminal } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
@@ -11,6 +11,7 @@ import type { Article, Destination, Event } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
 import { isValidFeaturedImageUrl } from '@/lib/utils';
+import { FeedbackForm } from '@/components/forms/FeedbackForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -240,6 +241,22 @@ export default async function HomePage() {
             <Button size="lg" asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
               <Link href="/travel-tips">Get Tips <Users className="ml-2 h-5 w-5" /></Link>
             </Button>
+          </div>
+        </section>
+
+        {/* Feedback Section */}
+        <section id="feedback-section" className="py-16 bg-background">
+          <div className="container max-w-2xl mx-auto">
+            <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
+              <MessageSquareHeart className="mr-3 h-8 w-8 text-accent" />
+              Leave Your Feedback
+            </h2>
+            <p className="text-center text-muted-foreground mb-8">
+              We'd love to hear from you! Whether you have questions, suggestions, or just want to share your experience, please fill out the form below.
+            </p>
+            <Card className="shadow-lg p-6 md:p-8">
+              <FeedbackForm />
+            </Card>
           </div>
         </section>
       </main>
