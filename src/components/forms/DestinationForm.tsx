@@ -19,51 +19,110 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Destination } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
 
-export const destinationSchema = z.object({
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const SUPABASE_BUCKET_NAME = 'content_images';
+
+export const destinationFormSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }),
   description: z.string().min(10, { message: "Description is too short." }),
-  featured_image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  featured_image_url_field: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  featured_image_file_field: z.custom<File>(val => val instanceof File, "Please select a file.")
+    .optional()
+    .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), '.jpg, .jpeg, .png, .webp, .gif files are accepted.'),
   location: z.string().optional(),
   highlights: z.array(z.string()).optional(),
   status: z.enum(["draft", "published"]),
+})
+.refine(data => !(data.featured_image_url_field && data.featured_image_file_field), {
+  message: "Provide either an image URL or an image file, not both.",
+  path: ["featured_image_url_field"],
 });
 
-type DestinationFormValues = z.infer<typeof destinationSchema>;
+type DestinationFormValues = z.infer<typeof destinationFormSchema>;
+
+export type DestinationSubmitData = {
+  name: string;
+  description: string;
+  featured_image?: string;
+  location?: string;
+  highlights?: string[];
+  status: 'draft' | 'published';
+};
 
 interface DestinationFormProps {
   initialData?: Destination | null;
-  onSubmit: (values: DestinationFormValues) => Promise<void>;
+  onSubmit: (values: DestinationSubmitData) => Promise<void>;
 }
 
 export function DestinationForm({ initialData, onSubmit }: DestinationFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const form = useForm<DestinationFormValues>({
-    resolver: zodResolver(destinationSchema),
-    defaultValues: initialData ? {
-      ...initialData,
-      featured_image: initialData.featured_image || '',
-      location: initialData.location || '',
-      highlights: initialData.highlights || [], 
-    } : {
-      name: "",
-      description: "",
-      featured_image: "",
-      location: "",
-      highlights: [],
-      status: "draft",
+    resolver: zodResolver(destinationFormSchema),
+    defaultValues: {
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      featured_image_url_field: initialData?.featured_image || "",
+      featured_image_file_field: undefined,
+      location: initialData?.location || "",
+      highlights: initialData?.highlights || [],
+      status: initialData?.status || "draft",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
-  const handleSubmit = async (values: DestinationFormValues) => {
-    await onSubmit(values);
+  const handleFormSubmit = async (formValues: DestinationFormValues) => {
+    let finalFeaturedImageUrl: string | undefined = undefined;
+
+    if (formValues.featured_image_file_field) {
+      const file = formValues.featured_image_file_field;
+      const filePath = `public/${Date.now()}-${file.name}`;
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from(SUPABASE_BUCKET_NAME)
+          .upload(filePath, file);
+
+        if (uploadError) {
+          toast({ title: "Image Upload Error", description: uploadError.message, variant: "destructive" });
+          return;
+        }
+        if (uploadData?.path) {
+            const { data: publicUrlData } = supabase.storage
+            .from(SUPABASE_BUCKET_NAME)
+            .getPublicUrl(uploadData.path);
+            finalFeaturedImageUrl = publicUrlData?.publicUrl;
+        } else {
+            toast({ title: "Image Upload Error", description: "Failed to get public URL for uploaded image.", variant: "destructive" });
+            return;
+        }
+      } catch (e) {
+        toast({ title: "Image Upload Failed", description: (e as Error).message, variant: "destructive" });
+        return;
+      }
+    } else if (formValues.featured_image_url_field) {
+      finalFeaturedImageUrl = formValues.featured_image_url_field;
+    }
+
+    const dataToSubmit: DestinationSubmitData = {
+      name: formValues.name,
+      description: formValues.description,
+      featured_image: finalFeaturedImageUrl || undefined,
+      location: formValues.location || undefined,
+      highlights: formValues.highlights || [],
+      status: formValues.status,
+    };
+    await onSubmit(dataToSubmit);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -92,13 +151,40 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
         />
         <FormField
           control={form.control}
-          name="featured_image"
+          name="featured_image_url_field"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/featured-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+                <Input 
+                  type="url" 
+                  placeholder="https://example.com/image.png" 
+                  {...field} 
+                  value={field.value ?? ""} 
+                  disabled={isLoading || !!form.watch('featured_image_file_field')} />
               </FormControl>
+              <FormDescription>Paste an image URL.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="featured_image_file_field"
+          render={({ field: { onChange, value, ...restField }}) => (
+            <FormItem>
+              <FormLabel>Or Upload Featured Image (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="file" 
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                  {...restField} 
+                  disabled={isLoading || !!form.watch('featured_image_url_field')}
+                  className="pt-2 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90"
+                />
+              </FormControl>
+              <FormDescription>Max 5MB. Accepted: .jpg, .png, .webp, .gif</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -118,16 +204,16 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
         />
         <FormField
           control={form.control}
-          name="highlights" 
+          name="highlights"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Highlights (Optional, comma-separated)</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Highlight 1, Highlight 2, Highlight 3" 
+                <Input
+                  placeholder="Highlight 1, Highlight 2, Highlight 3"
                   value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                   onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
-                  disabled={isLoading} 
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormDescription>Enter key highlights separated by commas.</FormDescription>
@@ -158,7 +244,7 @@ export function DestinationForm({ initialData, onSubmit }: DestinationFormProps)
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
-            {initialData ? "Save Changes" : "Create Destination"}
+            {isLoading ? (initialData ? "Saving..." : "Creating...") : (initialData ? "Save Changes" : "Create Destination")}
           </Button>
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
             Cancel

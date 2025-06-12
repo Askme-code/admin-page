@@ -24,50 +24,110 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Event } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
 
-export const eventSchema = z.object({
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const SUPABASE_BUCKET_NAME = 'content_images';
+
+export const eventFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   description: z.string().min(10, { message: "Description is too short." }),
   event_date: z.date({ required_error: "Event date is required." }),
   location: z.string().min(1, { message: "Location is required." }),
-  featured_image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  featured_image_url_field: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  featured_image_file_field: z.custom<File>(val => val instanceof File, "Please select a file.")
+    .optional()
+    .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), '.jpg, .jpeg, .png, .webp, .gif files are accepted.'),
   status: z.enum(["draft", "published"]),
+})
+.refine(data => !(data.featured_image_url_field && data.featured_image_file_field), {
+  message: "Provide either an image URL or an image file, not both.",
+  path: ["featured_image_url_field"],
 });
 
-type EventFormValues = z.infer<typeof eventSchema>;
+type EventFormValues = z.infer<typeof eventFormSchema>;
+
+export type EventSubmitData = {
+  title: string;
+  description: string;
+  event_date: Date; 
+  location: string;
+  featured_image?: string;
+  status: 'draft' | 'published';
+};
 
 interface EventFormProps {
   initialData?: Event | null;
-  onSubmit: (values: EventFormValues) => Promise<void>;
+  onSubmit: (values: EventSubmitData) => Promise<void>;
 }
 
 export function EventForm({ initialData, onSubmit }: EventFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: initialData ? {
-      ...initialData,
-      event_date: new Date(initialData.event_date), 
-      featured_image: initialData.featured_image || '',
-    } : {
-      title: "",
-      description: "",
-      event_date: new Date(),
-      location: "",
-      featured_image: "",
-      status: "draft",
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: initialData?.title || "",
+      description: initialData?.description || "",
+      event_date: initialData ? new Date(initialData.event_date) : new Date(),
+      location: initialData?.location || "",
+      featured_image_url_field: initialData?.featured_image || "",
+      featured_image_file_field: undefined,
+      status: initialData?.status || "draft",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
-  const handleSubmit = async (values: EventFormValues) => {
-    await onSubmit(values);
+  const handleFormSubmit = async (formValues: EventFormValues) => {
+    let finalFeaturedImageUrl: string | undefined = undefined;
+
+    if (formValues.featured_image_file_field) {
+      const file = formValues.featured_image_file_field;
+      const filePath = `public/${Date.now()}-${file.name}`;
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from(SUPABASE_BUCKET_NAME)
+          .upload(filePath, file);
+
+        if (uploadError) {
+          toast({ title: "Image Upload Error", description: uploadError.message, variant: "destructive" });
+          return;
+        }
+        if (uploadData?.path) {
+            const { data: publicUrlData } = supabase.storage
+            .from(SUPABASE_BUCKET_NAME)
+            .getPublicUrl(uploadData.path);
+            finalFeaturedImageUrl = publicUrlData?.publicUrl;
+        } else {
+            toast({ title: "Image Upload Error", description: "Failed to get public URL for uploaded image.", variant: "destructive" });
+            return;
+        }
+      } catch (e) {
+        toast({ title: "Image Upload Failed", description: (e as Error).message, variant: "destructive" });
+        return;
+      }
+    } else if (formValues.featured_image_url_field) {
+      finalFeaturedImageUrl = formValues.featured_image_url_field;
+    }
+
+    const dataToSubmit: EventSubmitData = {
+      title: formValues.title,
+      description: formValues.description,
+      event_date: formValues.event_date,
+      location: formValues.location,
+      featured_image: finalFeaturedImageUrl || undefined,
+      status: formValues.status,
+    };
+    await onSubmit(dataToSubmit);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="title"
@@ -149,13 +209,41 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
         />
         <FormField
           control={form.control}
-          name="featured_image"
+          name="featured_image_url_field"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Featured Image URL (Optional)</FormLabel>
               <FormControl>
-                <Input type="url" placeholder="https://example.com/featured-image.png" {...field} value={field.value ?? ""} disabled={isLoading} />
+                <Input 
+                  type="url" 
+                  placeholder="https://example.com/image.png" 
+                  {...field} 
+                  value={field.value ?? ""} 
+                  disabled={isLoading || !!form.watch('featured_image_file_field')} 
+                />
               </FormControl>
+              <FormDescription>Paste an image URL.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="featured_image_file_field"
+          render={({ field: { onChange, value, ...restField }}) => (
+            <FormItem>
+              <FormLabel>Or Upload Featured Image (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="file" 
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                  {...restField} 
+                  disabled={isLoading || !!form.watch('featured_image_url_field')}
+                  className="pt-2 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90"
+                />
+              </FormControl>
+              <FormDescription>Max 5MB. Accepted: .jpg, .png, .webp, .gif</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -183,7 +271,7 @@ export function EventForm({ initialData, onSubmit }: EventFormProps) {
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
-            {initialData ? "Save Changes" : "Create Event"}
+            {isLoading ? (initialData ? "Saving..." : "Creating...") : (initialData ? "Save Changes" : "Create Event")}
           </Button>
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
             Cancel
