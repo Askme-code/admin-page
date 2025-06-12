@@ -1,20 +1,18 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl) {
-  const errorMsg = "CRITICAL ERROR: Supabase URL is missing. Ensure NEXT_PUBLIC_SUPABASE_URL is set in your .env.local file and that the Next.js development server has been restarted.";
+  const errorMsg = "CRITICAL ERROR: Supabase URL is missing. Ensure NEXT_PUBLIC_SUPABASE_URL (or VITE_SUPABASE_URL for local Vite-based .env) is set and the Next.js development server has been restarted. For Vercel/production, NEXT_PUBLIC_SUPABASE_URL must be set in environment variables.";
   console.error(errorMsg);
-  // This throw will cause a server-side exception with a clear message.
   throw new Error(errorMsg);
 }
 
 if (!supabaseAnonKey) {
-  const errorMsg = "CRITICAL ERROR: Supabase Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_ANON_KEY is set in your .env.local file and that the Next.js development server has been restarted.";
+  const errorMsg = "CRITICAL ERROR: Supabase Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY for local Vite-based .env) is set and the Next.js development server has been restarted. For Vercel/production, NEXT_PUBLIC_SUPABASE_ANON_KEY must be set in environment variables.";
   console.error(errorMsg);
-  // This throw will cause a server-side exception with a clear message.
   throw new Error(errorMsg);
 }
 
