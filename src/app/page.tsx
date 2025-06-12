@@ -43,8 +43,6 @@ async function getHomepageData() {
     .limit(1)
     .maybeSingle();
 
-  // Temporarily fetch all reviews as status column might not exist in user's DB yet.
-  // User should add status='published' filter back once DB is updated.
   const featuredReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
@@ -64,13 +62,13 @@ async function getHomepageData() {
     destinationResult,
     eventResult,
     featuredReviewsResult,
-    allPublishedReviewsPromiseResult,
+    allPublishedReviewsResult, // Corrected variable name here
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
-    allPublishedReviewsPromise, // Corrected variable name here
+    allPublishedReviewsPromise,
   ]);
 
   return {
@@ -78,8 +76,8 @@ async function getHomepageData() {
     popularDestination: destinationResult.data as Destination | null,
     upcomingEvent: eventResult.data as Event | null,
     featuredTestimonials: featuredReviewsResult.data as UserReview[] | null,
-    allPublishedReviews: allPublishedReviewsPromiseResult.data as UserReview[] | null,
-    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsPromiseResult.error,
+    allPublishedReviews: allPublishedReviewsResult.data as UserReview[] | null,
+    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsResult.error,
   };
 }
 
@@ -123,7 +121,7 @@ export default async function HomePage() {
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex flex-col items-center justify-center text-primary-foreground py-12 md:py-24">
+        <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex flex-col items-center justify-end text-primary-foreground py-12 md:py-24">
           <ImageSlideshow
             images={slideShowImages}
             captions={slideShowCaptions}
@@ -131,7 +129,7 @@ export default async function HomePage() {
             activeImageOpacity={0.3}
             captionClassName="z-10"
           />
-          <div className="container text-center z-10 mt-8 pb-8 md:pb-12"> {/* Changed mt-auto to mt-8 */}
+          <div className="container text-center z-10 pb-8 md:pb-12">
             <Button size="lg" asChild className="animate-fade-in-up animation-delay-300">
               <Link href="/destinations">Explore Destinations <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
