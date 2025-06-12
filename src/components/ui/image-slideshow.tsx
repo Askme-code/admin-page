@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface ImageSlideshowProps {
   images: (string | StaticImageData)[];
-  captions?: string[];
+  captions?: { heading: string; subheading: string }[];
   interval?: number;
   className?: string;
   imageClassName?: string;
@@ -65,16 +65,22 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
       {currentCaption && (
         <div 
           className={cn(
-            "absolute inset-0 flex items-center justify-center p-4 transition-opacity duration-1000 ease-in-out",
-            captionClassName,
-            // This logic tries to show caption only when image is active
-            // However, for smoother transitions, we might want caption to fade with image or independently
+            "absolute inset-0 flex flex-col items-center justify-center p-4 transition-opacity duration-1000 ease-in-out text-center",
+            captionClassName
           )}
-          style={{ opacity: 1 }} // Caption is always part of the active slide conceptually
+          style={{ opacity: 1 }} 
         >
-          <p className="text-center text-xl md:text-3xl font-semibold text-primary-foreground"
-             style={{ textShadow: '0 0 5px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}>
-            {currentCaption}
+          <h2 
+            className="font-headline text-3xl md:text-5xl font-bold text-primary-foreground mb-3"
+            style={{ textShadow: '0 0 8px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4)' }}
+          >
+            {currentCaption.heading}
+          </h2>
+          <p 
+            className="text-lg md:text-xl text-primary-foreground font-light max-w-2xl"
+            style={{ textShadow: '0 0 5px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}
+          >
+            {currentCaption.subheading}
           </p>
         </div>
       )}

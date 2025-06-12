@@ -43,19 +43,17 @@ async function getHomepageData() {
     .limit(1)
     .maybeSingle();
 
-  // Fetch a few testimonials
   const featuredReviewsPromise = supabase
     .from('user_reviews')
-    // .eq('status', 'published') // Temporarily removed, re-add when DB 'status' column is confirmed
     .select('*')
+    // .eq('status', 'published') // Temporarily removed if status column is not yet present
     .order('created_at', { ascending: false })
     .limit(3);
   
-  // Fetch all reviews for broader display
   const allPublishedReviewsPromise = supabase
     .from('user_reviews')
-    // .eq('status', 'published') // Temporarily removed, re-add when DB 'status' column is confirmed
     .select('*')
+    // .eq('status', 'published') // Temporarily removed if status column is not yet present
     .order('created_at', { ascending: false });
 
 
@@ -108,12 +106,12 @@ export default async function HomePage() {
   ];
 
   const slideShowCaptions = [
-    "Experience Tanzania and the soul of Africa — where every sunrise tells a new story and every sunset leaves you breathless.",
-    "Welcome to Africa’s beating heart — from Tanzania’s mighty plains to the continent’s timeless rhythms.",
-    "Explore Tanzania, embrace Africa — a continent rich in spirit, wild beauty, and unforgettable journeys.",
-    "Africa calls, and Tanzania answers — with roaring wildlife, ancient cultures, and landscapes that touch the heavens.",
-    "From the snow-capped peaks of Kilimanjaro to the warmth of African hospitality, Tanzania is where dreams begin.",
-    "Roam the Serengeti, sail the Indian Ocean, and climb Africa’s tallest mountain — all in one Tanzanian adventure."
+    { heading: "Discover Tanzania's Soul", subheading: "Where every sunrise tells a new story and every sunset leaves you breathless." },
+    { heading: "Africa's Beating Heart", subheading: "From Tanzania’s mighty plains to the continent’s timeless rhythms." },
+    { heading: "Embrace Wild Beauty", subheading: "Explore a continent rich in spirit, wild beauty, and unforgettable journeys." },
+    { heading: "The Call of Africa", subheading: "Tanzania answers with roaring wildlife, ancient cultures, and landscapes that touch the heavens." },
+    { heading: "Where Dreams Begin", subheading: "From Kilimanjaro's peaks to the warmth of African hospitality." },
+    { heading: "Your Grand Adventure", subheading: "Roam the Serengeti, sail the Indian Ocean, and climb Africa’s tallest mountain." }
   ];
 
 
@@ -130,8 +128,7 @@ export default async function HomePage() {
             activeImageOpacity={0.3}
             captionClassName="z-10" 
           />
-          <div className="container text-center z-10 mt-auto pb-8 md:pb-12"> {/* Adjusted for button positioning */}
-            {/* Static Title and Subtitle are removed, captions are now in ImageSlideshow */}
+          <div className="container text-center z-10 mt-auto pb-8 md:pb-12">
             <Button size="lg" asChild className="animate-fade-in-up animation-delay-300">
               <Link href="/destinations">Explore Destinations <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
