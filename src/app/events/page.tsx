@@ -1,3 +1,4 @@
+
 import type { Event } from '@/lib/types';
 import EventCard from '@/components/cards/EventCard';
 import Header from '@/components/layout/Header';
@@ -5,6 +6,8 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
+
+export const dynamic = 'force-dynamic'; // Ensures the page is dynamically rendered
 
 export default async function EventsPage() {
   const { data: events, error } = await supabase

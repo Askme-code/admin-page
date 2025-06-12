@@ -10,6 +10,8 @@ import { Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { isValidFeaturedImageUrl } from '@/lib/utils';
 
+export const revalidate = 60; // Revalidate this page at most every 60 seconds
+
 export async function generateStaticParams() {
   const { data: events, error } = await supabase
     .from('events')
