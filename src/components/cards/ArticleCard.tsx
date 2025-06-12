@@ -5,22 +5,41 @@ import type { Article } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CalendarDays, UserCircle } from 'lucide-react';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
 
 interface ArticleCardProps {
   article: Article;
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
+  const validImageUrl = isValidFeaturedImageUrl(article.featured_image);
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      {article.featured_image && (
+      {validImageUrl && (
         <div className="relative w-full h-48">
           <Image
-            src={article.featured_image}
+            src={validImageUrl}
             alt={article.title}
             layout="fill"
             objectFit="cover"
             data-ai-hint="travel blog"
+          />
+        </div>
+      )}
+      {!validImageUrl && article.featured_image && ( // If original URL existed but was invalid
+         <div className="relative w-full h-48 bg-muted flex items-center justify-center">
+           <p className="text-xs text-muted-foreground">Image not available</p>
+         </div>
+      )}
+      {!validImageUrl && !article.featured_image && ( // If original URL was empty
+        <div className="relative w-full h-48">
+          <Image
+            src="https://placehold.co/600x400.png"
+            alt={article.title}
+            layout="fill"
+            objectFit="cover"
+            data-ai-hint="placeholder travel blog"
           />
         </div>
       )}

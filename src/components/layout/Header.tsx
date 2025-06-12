@@ -1,6 +1,7 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, MountainSnow } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 
@@ -43,11 +44,18 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-              <nav className="grid gap-6 text-lg font-medium mt-8">
-                <Link href="/" className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  <MountainSnow className="h-7 w-7 text-primary" />
-                  Tanzania Trails
-                </Link>
+              <SheetHeader className="mb-4 border-b pb-4">
+                <SheetTitle asChild>
+                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                    <MountainSnow className="h-7 w-7 text-primary" />
+                    Tanzania Trails
+                  </Link>
+                </SheetTitle>
+                {/* <SheetDescription>
+                  Navigate through the wonders of Tanzania.
+                </SheetDescription> */}
+              </SheetHeader>
+              <nav className="grid gap-6 text-lg font-medium">
                 {navItems.map((item) => (
                   <Link
                     key={item.title}

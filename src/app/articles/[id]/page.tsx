@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
 import Link from 'next/link';
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
 
 export async function generateStaticParams() {
   const { data: articles, error } = await supabase
@@ -56,6 +57,8 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
     );
   }
 
+  const validFeaturedImage = isValidFeaturedImageUrl(article.featured_image);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -63,16 +66,20 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
         <div className="container max-w-4xl mx-auto">
           <article>
             <header className="mb-8">
-              {article.featured_image && (
+              {validFeaturedImage ? (
                 <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg">
                   <Image
-                    src={article.featured_image}
+                    src={validFeaturedImage}
                     alt={article.title}
                     layout="fill"
                     objectFit="cover"
                     priority
                     data-ai-hint="travel blog header"
                   />
+                </div>
+              ) : article.featured_image && ( // Original URL existed but was invalid
+                <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg bg-muted flex items-center justify-center">
+                   <p className="text-muted-foreground">Featured image not available</p>
                 </div>
               )}
               <h1 className="font-headline text-3xl md:text-5xl font-bold mb-4 leading-tight">{article.title}</h1>

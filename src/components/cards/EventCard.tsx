@@ -5,22 +5,40 @@ import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const validImageUrl = isValidFeaturedImageUrl(event.featured_image);
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      {event.featured_image && (
+      {validImageUrl && (
         <div className="relative w-full h-48">
           <Image
-            src={event.featured_image}
+            src={validImageUrl}
             alt={event.title}
             layout="fill"
             objectFit="cover"
             data-ai-hint="Tanzania event"
+          />
+        </div>
+      )}
+       {!validImageUrl && event.featured_image && (
+         <div className="relative w-full h-48 bg-muted flex items-center justify-center">
+           <p className="text-xs text-muted-foreground">Image not available</p>
+         </div>
+      )}
+      {!validImageUrl && !event.featured_image && (
+        <div className="relative w-full h-48">
+          <Image
+            src="https://placehold.co/600x400.png"
+            alt={event.title}
+            layout="fill"
+            objectFit="cover"
+            data-ai-hint="placeholder Tanzania event"
           />
         </div>
       )}

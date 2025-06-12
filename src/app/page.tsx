@@ -10,6 +10,9 @@ import { supabase } from '@/lib/supabaseClient';
 import type { Article, Destination, Event } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 async function getFeaturedData() {
   const articlePromise = supabase
@@ -58,6 +61,9 @@ export default async function HomePage() {
     console.error("Error fetching featured data for homepage:", error);
   }
 
+  const heroImageUrl = isValidFeaturedImageUrl("https://placehold.co/1920x1080.png") || "https://placehold.co/1920x1080.png";
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -65,12 +71,13 @@ export default async function HomePage() {
         {/* Hero Section */}
         <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex items-center justify-center text-primary-foreground py-12 md:py-24">
           <Image 
-            src="https://placehold.co/1920x1080.png" 
+            src={heroImageUrl}
             alt="Tanzania Landscape" 
             layout="fill" 
             objectFit="cover" 
             className="absolute inset-0 z-0 opacity-30"
             data-ai-hint="Tanzania landscape"
+            priority
           />
           <div className="container text-center z-10">
             <h1 className="font-headline text-4xl md:text-6xl font-bold mb-6 animate-fade-in-down">Welcome to Tanzania!</h1>
@@ -107,7 +114,7 @@ export default async function HomePage() {
                 <div className="md:flex">
                   <div className="md:w-1/2">
                     <Image
-                      src={featuredArticle.featured_image || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(featuredArticle.featured_image) || 'https://placehold.co/600x400.png'}
                       alt={featuredArticle.title}
                       width={600}
                       height={400}
@@ -143,7 +150,7 @@ export default async function HomePage() {
                  <div className="md:flex md:flex-row-reverse">
                   <div className="md:w-1/2">
                     <Image
-                      src={popularDestination.featured_image || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(popularDestination.featured_image) || 'https://placehold.co/600x400.png'}
                       alt={popularDestination.name}
                       width={600}
                       height={400}
@@ -179,7 +186,7 @@ export default async function HomePage() {
                 <div className="md:flex">
                    <div className="md:w-1/2">
                     <Image
-                      src={upcomingEvent.featured_image || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(upcomingEvent.featured_image) || 'https://placehold.co/600x400.png'}
                       alt={upcomingEvent.title}
                       width={600}
                       height={400}

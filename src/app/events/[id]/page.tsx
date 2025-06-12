@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
 import Link from 'next/link';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
 
 export async function generateStaticParams() {
   const { data: events, error } = await supabase
@@ -55,6 +56,8 @@ export default async function EventDetailPage({ params }: { params: { id: string
     );
   }
 
+  const validFeaturedImage = isValidFeaturedImageUrl(event.featured_image);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -62,16 +65,20 @@ export default async function EventDetailPage({ params }: { params: { id: string
         <div className="container max-w-4xl mx-auto">
           <article>
             <header className="mb-8">
-              {event.featured_image && (
+              {validFeaturedImage ? (
                 <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg">
                   <Image
-                    src={event.featured_image}
+                    src={validFeaturedImage}
                     alt={event.title}
                     layout="fill"
                     objectFit="cover"
                     priority
                     data-ai-hint="Tanzania festival"
                   />
+                </div>
+              ) : event.featured_image && (
+                 <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg bg-muted flex items-center justify-center">
+                   <p className="text-muted-foreground">Featured image not available</p>
                 </div>
               )}
               <h1 className="font-headline text-3xl md:text-5xl font-bold mb-4 leading-tight">{event.title}</h1>

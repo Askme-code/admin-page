@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
 import Link from 'next/link';
+import { isValidFeaturedImageUrl } from '@/lib/utils';
 
 export async function generateStaticParams() {
   const { data: destinations, error } = await supabase
@@ -54,6 +55,8 @@ export default async function DestinationDetailPage({ params }: { params: { id: 
       </div>
     );
   }
+  
+  const validFeaturedImage = isValidFeaturedImageUrl(destination.featured_image);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -62,16 +65,20 @@ export default async function DestinationDetailPage({ params }: { params: { id: 
         <div className="container max-w-4xl mx-auto">
           <article>
             <header className="mb-8">
-              {destination.featured_image && (
+              {validFeaturedImage ? (
                 <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg">
                   <Image
-                    src={destination.featured_image}
+                    src={validFeaturedImage}
                     alt={destination.name}
                     layout="fill"
                     objectFit="cover"
                     priority
                     data-ai-hint="Tanzania attraction"
                   />
+                </div>
+              ) : destination.featured_image && (
+                 <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-lg bg-muted flex items-center justify-center">
+                   <p className="text-muted-foreground">Featured image not available</p>
                 </div>
               )}
               <h1 className="font-headline text-3xl md:text-5xl font-bold mb-4 leading-tight">{destination.name}</h1>
