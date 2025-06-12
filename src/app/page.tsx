@@ -3,11 +3,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart, Quote, Send } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart, Quote, Send, Youtube } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
-import type { Article, Destination, Event, UserReview } from '@/lib/types';
+import type { Article, Destination, Event, UserReview, YoutubeUpdate } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
 import { isValidFeaturedImageUrl } from '@/lib/utils';
@@ -15,6 +15,8 @@ import { FeedbackForm } from '@/components/forms/FeedbackForm';
 import { PublicReviewForm } from '@/components/forms/PublicReviewForm';
 import TestimonialCard from '@/components/cards/TestimonialCard';
 import ImageSlideshow from '@/components/ui/image-slideshow';
+import YoutubeUpdateCard from '@/components/cards/YoutubeUpdateCard';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -46,15 +48,21 @@ async function getHomepageData() {
   const featuredReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    // .eq('status', 'published') // Temporarily removed
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(3);
 
   const allPublishedReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    // .eq('status', 'published') // Temporarily removed
+    .eq('status', 'published')
     .order('created_at', { ascending: false });
+
+  const youtubeUpdatesPromise = supabase
+    .from('youtube_updates')
+    .select('*')
+    .order('post_date', { ascending: false })
+    .limit(3);
 
 
   const [
@@ -62,13 +70,15 @@ async function getHomepageData() {
     destinationResult,
     eventResult,
     featuredReviewsResult,
-    allPublishedReviewsResult, // Corrected variable name here
+    allPublishedReviewsResult,
+    youtubeUpdatesResult,
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
     allPublishedReviewsPromise,
+    youtubeUpdatesPromise,
   ]);
 
   return {
@@ -77,7 +87,8 @@ async function getHomepageData() {
     upcomingEvent: eventResult.data as Event | null,
     featuredTestimonials: featuredReviewsResult.data as UserReview[] | null,
     allPublishedReviews: allPublishedReviewsResult.data as UserReview[] | null,
-    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsResult.error,
+    latestYoutubeUpdates: youtubeUpdatesResult.data as YoutubeUpdate[] | null,
+    error: articleResult.error || destinationResult.error || eventResult.error || featuredReviewsResult.error || allPublishedReviewsResult.error || youtubeUpdatesResult.error,
   };
 }
 
@@ -89,10 +100,11 @@ export default async function HomePage() {
     upcomingEvent,
     featuredTestimonials,
     allPublishedReviews,
+    latestYoutubeUpdates,
     error
   } = await getHomepageData();
 
-  if (error && process.env.NODE_ENV === 'development') { // Show error only in dev
+  if (error && process.env.NODE_ENV === 'development') { 
     console.error("[ Server ] Error fetching data for homepage:", error);
   }
 
@@ -120,7 +132,6 @@ export default async function HomePage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        {/* Hero Section */}
         <section className="relative h-[60vh] min-h-[400px] bg-gradient-to-r from-primary/80 to-accent/80 flex flex-col items-center justify-end text-primary-foreground py-12 md:py-24">
           <ImageSlideshow
             images={slideShowImages}
@@ -151,7 +162,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Featured Article Section */}
         {featuredArticle && (
           <section className="py-16 bg-background">
             <div className="container">
@@ -187,7 +197,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Popular Destination Section */}
         {popularDestination && (
           <section className="py-16 bg-secondary/30">
             <div className="container">
@@ -223,7 +232,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Upcoming Event Section */}
         {upcomingEvent && (
           <section className="py-16 bg-background">
             <div className="container">
@@ -266,9 +274,25 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Testimonials Section (Featured) */}
+        {/* Latest YouTube Updates Section */}
+        {latestYoutubeUpdates && latestYoutubeUpdates.length > 0 && (
+          <section id="youtube-updates-section" className="py-16 bg-secondary/50">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
+                <Youtube className="mr-3 h-8 w-8 text-red-600" />
+                Latest YouTube Updates
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {latestYoutubeUpdates.map((update) => (
+                  <YoutubeUpdateCard key={update.id} update={update} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {featuredTestimonials && featuredTestimonials.length > 0 && (
-          <section className="py-16 bg-secondary/50">
+          <section className="py-16 bg-background">
             <div className="container">
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
                 <Quote className="mr-3 h-8 w-8 text-accent transform scale-x-[-1]" />
@@ -284,9 +308,8 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* All Published Reviews Section */}
         {allPublishedReviews && allPublishedReviews.length > 0 && (
-          <section id="community-reviews-section" className="py-16 bg-background">
+          <section id="community-reviews-section" className="py-16 bg-secondary/30">
             <div className="container">
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Community Reviews</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -301,8 +324,6 @@ export default async function HomePage() {
           </section>
         )}
 
-
-        {/* ADVERTISEMENT SECTION */}
         <section className="py-8 bg-background">
           <div className="container">
             <AdSenseUnit
@@ -312,7 +333,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Travel Tips Teaser */}
         <section className="py-16 bg-primary/10">
           <div className="container text-center">
             <h2 className="font-headline text-3xl md:text-4xl font-semibold mb-6">Essential Travel Tips</h2>
@@ -325,7 +345,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Public Review Form Section */}
         <section id="submit-review-section" className="py-16 bg-secondary/30">
           <div className="container max-w-2xl mx-auto">
             <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
@@ -341,7 +360,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Feedback Section */}
         <section id="feedback-section" className="py-16 bg-background">
           <div className="container max-w-2xl mx-auto">
             <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
@@ -361,5 +379,3 @@ export default async function HomePage() {
     </div>
   );
 }
-    
-    

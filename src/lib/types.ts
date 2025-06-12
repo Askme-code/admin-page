@@ -77,3 +77,13 @@ export interface UserReview {
   created_at: string;
   updated_at: string; 
 }
+
+export interface YoutubeUpdate {
+  id: string; // bigint in Supabase, string in JS/TS
+  caption: string;
+  post_date: string; // date in Supabase, string in JS/TS (ISO format)
+  url: string;
+  likes: number;
+  dislikes: number;
+  created_at: string;
+}

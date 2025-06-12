@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -12,7 +13,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home, MessageSquareText, Star } from 'lucide-react';
+import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home, MessageSquareText, Star, Youtube } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -23,6 +24,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Destinations', href: '/admin/destinations', icon: Map },
   { title: 'Events', href: '/admin/events', icon: CalendarClock },
   { title: 'Travel Tips', href: '/admin/travel-tips', icon: Lightbulb },
+  { title: 'YouTube Updates', href: '/admin/youtube-updates', icon: Youtube },
   { title: 'User Feedback', href: '/admin/feedback', icon: MessageSquareText },
   { title: 'User Reviews', href: '/admin/reviews', icon: Star },
 ];
