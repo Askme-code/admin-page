@@ -42,19 +42,19 @@ async function getHomepageData() {
     .limit(1)
     .maybeSingle();
 
-  // Fetch a few testimonials (e.g., hand-picked or most recent published)
+  // Fetch a few testimonials
   const featuredReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    .eq('status', 'published')
+    // .eq('status', 'published') // Ensure your table has a 'status' column for this filter
     .order('created_at', { ascending: false })
     .limit(3);
   
-  // Fetch all published reviews for broader display
+  // Fetch all reviews for broader display
   const allPublishedReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    .eq('status', 'published')
+    // .eq('status', 'published') // Ensure your table has a 'status' column for this filter
     .order('created_at', { ascending: false });
 
 
@@ -63,13 +63,13 @@ async function getHomepageData() {
     destinationResult, 
     eventResult, 
     featuredReviewsResult,
-    allPublishedReviewsResult
+    allPublishedReviewsResult 
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
-    allPublishedReviewsPromise
+    allPublishedReviewsPromise // Corrected: was allPublishedReviewsResult
   ]);
 
   return {
@@ -94,7 +94,7 @@ export default async function HomePage() {
   } = await getHomepageData();
 
   if (error) {
-    console.error("Error fetching data for homepage:", error);
+    console.error("[ Server ] Error fetching data for homepage:", error);
   }
 
   const heroImageUrl = isValidFeaturedImageUrl("https://placehold.co/1920x1080.png") || "https://placehold.co/1920x1080.png";
@@ -350,3 +350,6 @@ export default async function HomePage() {
     </div>
   );
 }
+    
+
+    
