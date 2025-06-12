@@ -3,15 +3,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, Users, Terminal, MessageSquareHeart, Quote } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
-import type { Article, Destination, Event } from '@/lib/types';
+import type { Article, Destination, Event, UserReview } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdSenseUnit from '@/components/ads/AdSenseUnit';
 import { isValidFeaturedImageUrl } from '@/lib/utils';
 import { FeedbackForm } from '@/components/forms/FeedbackForm';
+import TestimonialCard from '@/components/cards/TestimonialCard';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -40,26 +42,35 @@ async function getFeaturedData() {
     .limit(1)
     .maybeSingle();
 
-  const [articleResult, destinationResult, eventResult] = await Promise.all([
+  const reviewsPromise = supabase
+    .from('user_reviews')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(3); // Fetch 3 latest published reviews
+
+  const [articleResult, destinationResult, eventResult, reviewsResult] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
+    reviewsPromise,
   ]);
 
   return {
     featuredArticle: articleResult.data as Article | null,
     popularDestination: destinationResult.data as Destination | null,
     upcomingEvent: eventResult.data as Event | null,
-    error: articleResult.error || destinationResult.error || eventResult.error,
+    testimonials: reviewsResult.data as UserReview[] | null,
+    error: articleResult.error || destinationResult.error || eventResult.error || reviewsResult.error,
   };
 }
 
 
 export default async function HomePage() {
-  const { featuredArticle, popularDestination, upcomingEvent, error } = await getFeaturedData();
+  const { featuredArticle, popularDestination, upcomingEvent, testimonials, error } = await getFeaturedData();
 
   if (error) {
-    console.error("Error fetching featured data for homepage:", error);
+    console.error("Error fetching data for homepage:", error);
   }
 
   const heroImageUrl = isValidFeaturedImageUrl("https://placehold.co/1920x1080.png") || "https://placehold.co/1920x1080.png";
@@ -217,6 +228,24 @@ export default async function HomePage() {
                   </div>
                 </div>
               </Card>
+            </div>
+          </section>
+        )}
+
+        {/* Testimonials Section */}
+        {testimonials && testimonials.length > 0 && (
+          <section className="py-16 bg-secondary/50">
+            <div className="container">
+              <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12 flex items-center justify-center">
+                <Quote className="mr-3 h-8 w-8 text-accent transform scale-x-[-1]" />
+                What Our Travelers Say
+                <Quote className="ml-3 h-8 w-8 text-accent" />
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {testimonials.map((review) => (
+                  <TestimonialCard key={review.id} review={review} />
+                ))}
+              </div>
             </div>
           </section>
         )}

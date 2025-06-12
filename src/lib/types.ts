@@ -64,3 +64,16 @@ export interface UserFeedback {
   message: string;
   created_at: string;
 }
+
+export interface UserReview {
+  id: string;
+  full_name: string;
+  email: string;
+  rating: number; // 1-5
+  review: string;
+  location?: string;
+  image_url?: string; // URL of the reviewer's image from Supabase Storage
+  status: 'pending' | 'published' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
