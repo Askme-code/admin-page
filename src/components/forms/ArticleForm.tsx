@@ -95,7 +95,8 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
 
         if (uploadError) {
           console.error("Supabase upload error:", uploadError);
-          toast({ title: "Image Upload Error", description: uploadError.message, variant: "destructive" });
+          const description = typeof uploadError.message === 'string' ? uploadError.message : "Could not upload image. Check RLS policies or bucket settings.";
+          toast({ title: "Image Upload Error", description, variant: "destructive" });
           return; // Stop submission if upload fails
         }
         
@@ -111,7 +112,7 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
 
       } catch (e) {
         console.error("File upload exception:", e);
-        toast({ title: "Image Upload Failed", description: (e as Error).message, variant: "destructive" });
+        toast({ title: "Image Upload Failed", description: (e as Error).message || "An unexpected error occurred during upload.", variant: "destructive" });
         return;
       }
     } else if (formValues.featured_image_url_field) {
@@ -277,3 +278,5 @@ export function ArticleForm({ initialData, onSubmit }: ArticleFormProps) {
     </Form>
   );
 }
+
+    

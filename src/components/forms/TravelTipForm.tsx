@@ -89,7 +89,9 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
           .upload(filePath, file);
 
         if (uploadError) {
-          toast({ title: "Image Upload Error", description: uploadError.message, variant: "destructive" });
+          console.error("Supabase upload error:", uploadError);
+          const description = typeof uploadError.message === 'string' ? uploadError.message : "Could not upload image. Check RLS policies or bucket settings.";
+          toast({ title: "Image Upload Error", description, variant: "destructive" });
           return;
         }
         if (uploadData?.path) {
@@ -102,7 +104,7 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
             return;
         }
       } catch (e) {
-        toast({ title: "Image Upload Failed", description: (e as Error).message, variant: "destructive" });
+        toast({ title: "Image Upload Failed", description: (e as Error).message || "An unexpected error occurred during upload.", variant: "destructive" });
         return;
       }
     } else if (formValues.featured_image_url_field) {
@@ -250,3 +252,5 @@ export function TravelTipForm({ initialData, onSubmit }: TravelTipFormProps) {
     </Form>
   );
 }
+
+    
