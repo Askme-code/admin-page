@@ -30,7 +30,7 @@ async function getHomepageData() {
     .from('destinations')
     .select('*')
     .eq('status', 'published')
-    .order('created_at', { ascending: false }) 
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
@@ -38,7 +38,7 @@ async function getHomepageData() {
     .from('events')
     .select('*')
     .eq('status', 'published')
-    .order('event_date', { ascending: true }) 
+    .order('event_date', { ascending: true })
     .limit(1)
     .maybeSingle();
 
@@ -46,7 +46,7 @@ async function getHomepageData() {
   const featuredReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    // .eq('status', 'published') // Ensure your table has a 'status' column for this filter
+    // .eq('status', 'published') // Temporarily removed due to missing column, re-add when DB is updated
     .order('created_at', { ascending: false })
     .limit(3);
   
@@ -54,7 +54,7 @@ async function getHomepageData() {
   const allPublishedReviewsPromise = supabase
     .from('user_reviews')
     .select('*')
-    // .eq('status', 'published') // Ensure your table has a 'status' column for this filter
+    // .eq('status', 'published') // Temporarily removed due to missing column, re-add when DB is updated
     .order('created_at', { ascending: false });
 
 
@@ -63,13 +63,13 @@ async function getHomepageData() {
     destinationResult, 
     eventResult, 
     featuredReviewsResult,
-    allPublishedReviewsResult 
+    allPublishedReviewsResult
   ] = await Promise.all([
     articlePromise,
     destinationPromise,
     eventPromise,
     featuredReviewsPromise,
-    allPublishedReviewsPromise // Corrected: was allPublishedReviewsResult
+    allPublishedReviewsPromise,
   ]);
 
   return {
@@ -97,7 +97,8 @@ export default async function HomePage() {
     console.error("[ Server ] Error fetching data for homepage:", error);
   }
 
-  const heroImageUrl = isValidFeaturedImageUrl("https://placehold.co/1920x1080.png") || "https://placehold.co/1920x1080.png";
+  // Changed to a local path. User needs to add this image to public/images/
+  const heroImageUrl = "/images/hero-tanzania-landscape-1920x1080.png";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -149,7 +150,7 @@ export default async function HomePage() {
                 <div className="md:flex">
                   <div className="md:w-1/2">
                     <Image
-                      src={isValidFeaturedImageUrl(featuredArticle.featured_image) || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(featuredArticle.featured_image) || '/images/placeholders/placeholder-600x400-article.png'}
                       alt={featuredArticle.title}
                       width={600}
                       height={400}
@@ -185,7 +186,7 @@ export default async function HomePage() {
                  <div className="md:flex md:flex-row-reverse">
                   <div className="md:w-1/2">
                     <Image
-                      src={isValidFeaturedImageUrl(popularDestination.featured_image) || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(popularDestination.featured_image) || '/images/placeholders/placeholder-600x400-destination.png'}
                       alt={popularDestination.name}
                       width={600}
                       height={400}
@@ -221,7 +222,7 @@ export default async function HomePage() {
                 <div className="md:flex">
                    <div className="md:w-1/2">
                     <Image
-                      src={isValidFeaturedImageUrl(upcomingEvent.featured_image) || 'https://placehold.co/600x400.png'}
+                      src={isValidFeaturedImageUrl(upcomingEvent.featured_image) || '/images/placeholders/placeholder-600x400-event.png'}
                       alt={upcomingEvent.title}
                       width={600}
                       height={400}

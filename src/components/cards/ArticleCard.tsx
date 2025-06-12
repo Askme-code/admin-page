@@ -13,36 +13,21 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ article }: ArticleCardProps) {
   const validImageUrl = isValidFeaturedImageUrl(article.featured_image);
+  // Fallback to a local public image if featured_image is invalid or missing
+  const imageSrc = validImageUrl || '/images/placeholders/placeholder-600x400-article.png';
+  const aiHint = validImageUrl ? "travel blog" : "article placeholder";
 
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      {validImageUrl && (
-        <div className="relative w-full h-48">
-          <Image
-            src={validImageUrl}
-            alt={article.title}
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="travel blog"
-          />
-        </div>
-      )}
-      {!validImageUrl && article.featured_image && ( // If original URL existed but was invalid
-         <div className="relative w-full h-48 bg-muted flex items-center justify-center">
-           <p className="text-xs text-muted-foreground">Image not available</p>
-         </div>
-      )}
-      {!validImageUrl && !article.featured_image && ( // If original URL was empty
-        <div className="relative w-full h-48">
-          <Image
-            src="https://placehold.co/600x400.png"
-            alt={article.title}
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="placeholder travel blog"
-          />
-        </div>
-      )}
+      <div className="relative w-full h-48">
+        <Image
+          src={imageSrc}
+          alt={article.title}
+          layout="fill"
+          objectFit="cover"
+          data-ai-hint={aiHint}
+        />
+      </div>
       <CardHeader>
         <CardTitle className="font-headline text-xl leading-tight">
           <Link href={`/articles/${article.id}`} className="hover:text-primary transition-colors">

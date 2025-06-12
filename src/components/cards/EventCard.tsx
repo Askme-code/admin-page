@@ -13,35 +13,21 @@ interface EventCardProps {
 
 export default function EventCard({ event }: EventCardProps) {
   const validImageUrl = isValidFeaturedImageUrl(event.featured_image);
+  // Fallback to a local public image if featured_image is invalid or missing
+  const imageSrc = validImageUrl || '/images/placeholders/placeholder-600x400-event.png';
+  const aiHint = validImageUrl ? "Tanzania event" : "event placeholder";
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      {validImageUrl && (
-        <div className="relative w-full h-48">
-          <Image
-            src={validImageUrl}
-            alt={event.title}
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="Tanzania event"
-          />
-        </div>
-      )}
-       {!validImageUrl && event.featured_image && (
-         <div className="relative w-full h-48 bg-muted flex items-center justify-center">
-           <p className="text-xs text-muted-foreground">Image not available</p>
-         </div>
-      )}
-      {!validImageUrl && !event.featured_image && (
-        <div className="relative w-full h-48">
-          <Image
-            src="https://placehold.co/600x400.png"
-            alt={event.title}
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="placeholder Tanzania event"
-          />
-        </div>
-      )}
+      <div className="relative w-full h-48">
+        <Image
+          src={imageSrc}
+          alt={event.title}
+          layout="fill"
+          objectFit="cover"
+          data-ai-hint={aiHint}
+        />
+      </div>
       <CardHeader>
         <CardTitle className="font-headline text-xl leading-tight">
           <Link href={`/events/${event.id}`} className="hover:text-primary transition-colors">
