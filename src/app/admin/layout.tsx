@@ -9,23 +9,33 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
-// Function to check if the user has an 'admin' role (conceptual)
-// In a real app, this would involve checking a 'roles' table or custom claims in Supabase JWT
 async function checkAdminRole(user_id: string | undefined): Promise<boolean> {
-  if (!user_id) return false;
-  // This is a placeholder. Replace with actual role checking logic.
-  // Example: Fetch user role from your 'users' or 'profiles' table.
+  if (!user_id) {
+    console.log("Admin check: No user_id provided, user is not admin.");
+    return false;
+  }
+  
   const { data, error } = await supabase
-    .from('users') // Assuming your 'users' table from the prompt has a 'role' column
+    .from('users') 
     .select('role')
     .eq('id', user_id)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error("Error fetching user role:", error);
+  if (error && error.code !== 'PGRST116') { // PGRST116: 0 rows, not an error for this check
+    console.error(`Admin check: Error fetching user role for user_id ${user_id}:`, error.message);
     return false;
   }
-  return data?.role === 'admin';
+
+  if (!data) {
+    console.warn(`Admin check: No profile found in public.users for user_id ${user_id}. User is not admin.`);
+    return false;
+  }
+
+  const isAdmin = data.role === 'admin';
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Admin check: User ${user_id} role is '${data.role}'. Is admin: ${isAdmin}`);
+  }
+  return isAdmin;
 }
 
 
@@ -53,14 +63,14 @@ export default function AdminLayout({
         setSession(currentSession);
         const isAdminUser = await checkAdminRole(currentSession.user?.id);
         setIsAdmin(isAdminUser);
-        if (!isAdminUser && pathname !== '/login') { // If not admin and not on login page
-          router.push('/'); // Redirect non-admins away from admin area
+        if (!isAdminUser && pathname !== '/login') { 
+          router.push('/'); 
         }
       } else {
         setSession(null);
         setIsAdmin(false);
         if (pathname !== '/login') {
-            router.push('/login'); // Redirect to admin login if no session
+            router.push('/login'); 
         }
       }
       setIsLoading(false);
@@ -75,13 +85,13 @@ export default function AdminLayout({
         const isAdminUser = await checkAdminRole(newSession.user?.id);
         setIsAdmin(isAdminUser);
         if (!isAdminUser && pathname.startsWith('/admin')) {
-            router.push('/'); // Redirect non-admins
+            router.push('/'); 
         } else if (isAdminUser && pathname === '/login') {
             router.push('/admin');
         }
       } else {
         setIsAdmin(false);
-        if (pathname.startsWith('/admin')) {
+        if (pathname.startsWith('/admin') && pathname !== '/login') { // Also ensure not to redirect if on login page
             router.push('/login');
         }
       }
@@ -106,12 +116,10 @@ export default function AdminLayout({
     );
   }
 
-  // If on /login page, let it render (it has its own logic for logged-in admins)
   if (pathname === '/login') {
     return <>{children}</>;
   }
   
-  // If there's a session AND the user is an admin, show admin layout
   if (session && isAdmin) {
     return (
       <SidebarProvider defaultOpen={true}>
@@ -125,7 +133,5 @@ export default function AdminLayout({
     );
   }
   
-  // If not loading, and not on /login, and no session or not admin, user should have been redirected by useEffect.
-  // This return null is a fallback to prevent rendering admin content if redirection is slow or fails.
   return null; 
 }
