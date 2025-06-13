@@ -104,7 +104,7 @@ export default async function HomePage() {
     error
   } = await getHomepageData();
 
-  if (error && process.env.NODE_ENV === 'development') { 
+  if (error && process.env.NODE_ENV === 'development') {
     console.error("[ Server ] Error fetching data for homepage:", error);
   }
 
@@ -168,14 +168,15 @@ export default async function HomePage() {
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Featured Story</h2>
               <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <div className="md:flex">
-                  <div className="md:w-1/2">
+                  <div className="md:w-1/2 relative h-64 md:h-auto md:aspect-[3/2]">
                     <Image
                       src={isValidFeaturedImageUrl(featuredArticle.featured_image) || '/images/placeholders/placeholder-600x400-article.png'}
                       alt={featuredArticle.title}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-64 md:h-full"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
                       data-ai-hint="travel blog featured"
+                      priority
                     />
                   </div>
                   <div className="md:w-1/2">
@@ -203,13 +204,13 @@ export default async function HomePage() {
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Popular Destination</h2>
               <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                  <div className="md:flex md:flex-row-reverse">
-                  <div className="md:w-1/2">
+                  <div className="md:w-1/2 relative h-64 md:h-auto md:aspect-[3/2]">
                     <Image
                       src={isValidFeaturedImageUrl(popularDestination.featured_image) || '/images/placeholders/placeholder-600x400-destination.png'}
                       alt={popularDestination.name}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-64 md:h-full"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
                       data-ai-hint="popular destination"
                     />
                   </div>
@@ -238,13 +239,13 @@ export default async function HomePage() {
               <h2 className="font-headline text-3xl md:text-4xl font-semibold text-center mb-12">Upcoming Event</h2>
               <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <div className="md:flex">
-                   <div className="md:w-1/2">
+                   <div className="md:w-1/2 relative h-64 md:h-auto md:aspect-[3/2]">
                     <Image
                       src={isValidFeaturedImageUrl(upcomingEvent.featured_image) || '/images/placeholders/placeholder-600x400-event.png'}
                       alt={upcomingEvent.title}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-64 md:h-full"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
                       data-ai-hint="upcoming event"
                     />
                   </div>

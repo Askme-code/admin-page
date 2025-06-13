@@ -13,17 +13,17 @@ interface ImageSlideshowProps {
   className?: string;
   imageClassName?: string;
   captionClassName?: string;
-  activeImageOpacity?: number; 
+  activeImageOpacity?: number;
 }
 
 const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
   images,
   captions,
-  interval = 5000, 
+  interval = 5000,
   className,
   imageClassName,
   captionClassName,
-  activeImageOpacity = 0.3, 
+  activeImageOpacity = 0.3,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -38,7 +38,7 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
   }, [currentIndex, images, interval]);
 
   if (!images || images.length === 0) {
-    return null; 
+    return null;
   }
 
   const currentCaption = captions && captions.length > currentIndex ? captions[currentIndex] : null;
@@ -47,14 +47,14 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
     <div className={cn("relative w-full h-full overflow-hidden", className)}>
       {images.map((src, index) => (
         <Image
-          key={typeof src === 'string' ? src : src.src} 
+          key={typeof src === 'string' ? src : src.src}
           src={src}
           alt={`Slideshow image ${index + 1}`}
-          layout="fill"
-          objectFit="cover"
-          priority={index === 0} 
+          fill
+          priority={index === 0}
+          sizes="100vw"
           className={cn(
-            "absolute inset-0 transition-opacity duration-1000 ease-in-out",
+            "absolute inset-0 transition-opacity duration-1000 ease-in-out object-cover",
             imageClassName,
             index === currentIndex ? `opacity-${Math.round(activeImageOpacity * 100)}` : "opacity-0"
           )}
@@ -63,20 +63,20 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({
         />
       ))}
       {currentCaption && (
-        <div 
+        <div
           className={cn(
             "absolute inset-0 flex flex-col items-center justify-center p-4 transition-opacity duration-1000 ease-in-out text-center",
             captionClassName
           )}
-          style={{ opacity: 1 }} 
+          style={{ opacity: 1 }}
         >
-          <h2 
+          <h2
             className="font-headline text-3xl md:text-5xl font-bold text-primary-foreground mb-3"
             style={{ textShadow: '0 0 8px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4)' }}
           >
             {currentCaption.heading}
           </h2>
-          <p 
+          <p
             className="text-lg md:text-xl text-primary-foreground font-light max-w-2xl"
             style={{ textShadow: '0 0 5px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}
           >
