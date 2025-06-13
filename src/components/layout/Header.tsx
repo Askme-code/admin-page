@@ -6,7 +6,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
+  // SheetTitle, // Removed unused import
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet';
@@ -19,11 +19,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Menu, MountainSnow, LogOut, User, Search, ChevronDown, LogIn, UserPlus, Ticket, ListChecks, Newspaper, MapPin, Lightbulb, MessageSquare, Info, ChevronRight, HomeIcon } from 'lucide-react';
+import { Menu, MountainSnow, LogOut, User, Search, ChevronDown, LogIn, UserPlus, Ticket, ListChecks, Newspaper, MapPin, Lightbulb, MessageSquare, Info, ChevronRight, HomeIcon, CalendarClock } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { signOutUser, getCurrentUser } from '@/app/actions/userAuthActions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
@@ -34,17 +34,18 @@ const mainNavLinks: NavItem[] = [
   { title: 'Home', href: '/', icon: HomeIcon },
   {
     title: 'Update',
-    href: '#', 
+    href: '#',
     isDropdownTrigger: true,
-    icon: Newspaper, 
+    icon: Newspaper,
     children: [
       { title: 'Articles', href: '/articles', icon: Newspaper },
       { title: 'Destinations', href: '/destinations', icon: MapPin },
+      { title: 'Events', href: '/events', icon: CalendarClock },
       { title: 'Travel Tips', href: '/travel-tips', icon: Lightbulb },
     ],
   },
   { title: 'Feedback', href: '/#feedback-section', icon: MessageSquare },
-  { title: 'About', href: '/plan-your-visit', icon: Info }, 
+  { title: 'About', href: '/plan-your-visit', icon: Info },
 ];
 
 const authenticatedUserNavLinks: NavItem[] = [
@@ -69,13 +70,16 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCurrentUser = useCallback(async () => {
-    if (session?.user) {
-      const userProfile = await getCurrentUser();
-      setCurrentUser(userProfile);
+    // Ensure session is not null before attempting to access session.user
+    const currentSessionData = await supabase.auth.getSession(); // Get current session directly
+    if (currentSessionData && currentSessionData.data.session?.user) {
+        const userProfile = await getCurrentUser();
+        setCurrentUser(userProfile);
     } else {
-      setCurrentUser(null);
+        setCurrentUser(null);
     }
-  }, [session?.user]);
+  }, []);
+
 
   useEffect(() => {
     const getSessionAndUser = async () => {
@@ -104,7 +108,7 @@ export default function Header() {
       if (_event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
         router.push('/');
       }
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading state is managed here too
     });
 
     return () => {
@@ -117,7 +121,7 @@ export default function Header() {
     const result = await signOutUser();
     if (result.success) {
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      setCurrentUser(null); 
+      setCurrentUser(null);
       router.push('/');
       router.refresh();
     } else {
@@ -129,7 +133,9 @@ export default function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       toast({ title: "Search Submitted", description: `You searched for: ${searchQuery}` });
-      setSearchQuery(""); 
+      // Future: router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      if (isSheetOpen) setIsSheetOpen(false);
     }
   };
 
@@ -169,19 +175,19 @@ export default function Header() {
     }
 
     if (item.isButton) {
-      return (
+       return (
          <Button variant={isMobile ? "ghost" : "default"} size="sm" asChild className={isMobile ? "w-full justify-start px-3 py-2 " + mobileLinkClasses : ""} onClick={() => isMobile && setIsSheetOpen(false)}>
             <Link href={item.href}>
               {item.icon && <item.icon className="mr-2 h-4 w-4" />}
               {item.title}
             </Link>
           </Button>
-      );
+       );
     }
-    
+
     if (item.action) {
        return (
-        <Button variant="ghost" className={isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses} onClick={item.action}>
+        <Button variant="ghost" className={isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses} onClick={() => {item.action!(); if (isMobile) setIsSheetOpen(false);}}>
             {isMobile && item.icon && <item.icon className="h-5 w-5" />}
             {item.title}
         </Button>
@@ -200,19 +206,18 @@ export default function Header() {
     );
   };
 
-  const mobileNavItems: NavItem[] = [
-    ...mainNavLinks.flatMap(item => {
-      if (item.isDropdownTrigger && item.children) {
-        const childrenArray = Array.isArray(item.children) ? item.children : [];
-        const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` }));
-        return [item, ...mappedChildren];
-      } else {
-        return [item];
-      }
-    }),
-    ...(session ? authenticatedUserNavLinks : []),
-    ...(session ? [{ title: "Logout", href: "#", icon: LogOut, action: handleLogout }] : guestNavLinks),
-  ];
+ const mobileNavItems: NavItem[] = mainNavLinks.flatMap(item => {
+    if (item.isDropdownTrigger && item.children) {
+      // Ensure children is an array before mapping
+      const childrenArray = Array.isArray(item.children) ? item.children : [];
+      const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` })); // Indent children
+      return [item, ...mappedChildren];
+    }
+    return [item];
+  }).concat(
+    session ? authenticatedUserNavLinks : [],
+    session ? [{ title: "Logout", href: "#", icon: LogOut, action: handleLogout }] : guestNavLinks
+  );
 
 
   return (
@@ -223,13 +228,13 @@ export default function Header() {
           <span className="hidden sm:inline">Tanzania Tourist Trails</span>
           <span className="sm:hidden">TTT</span>
         </Link>
-        
+
         <nav className="hidden md:flex flex-grow items-center gap-4 lg:gap-6">
           {mainNavLinks.map((item) => (
             <div key={item.title}>{renderNavLink(item)}</div>
           ))}
-          <div className="flex-grow" /> 
-          
+          <div className="flex-grow" /> {/* Spacer */}
+
           <form onSubmit={handleSearchSubmit} className="relative ml-auto flex-1 sm:flex-initial max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -312,26 +317,30 @@ export default function Header() {
                 />
               </form>
               <nav className="grid gap-1 text-base font-medium">
-                {mobileNavItems.map((item) => {
+                {mobileNavItems.map((item, index) => {
+                   // Check if item is a dropdown trigger and has children for mobile rendering
                    if (item.isDropdownTrigger && item.children) {
-                    const mainItem = (
-                      <div key={`${item.title}-trigger`} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
-                        {item.icon && <item.icon className="h-5 w-5" />}
-                        {item.title}
-                      </div>
-                    );
-                    const childrenItems = item.children.map(child => (
-                      <SheetClose asChild key={child.title}>
-                        {renderNavLink({...child, title: child.title}, true)}
-                      </SheetClose>
-                    ));
-                    return [mainItem, ...childrenItems];
-                  }
-                  return (
-                    <SheetClose asChild key={item.title}>
-                      {renderNavLink(item, true)}
-                    </SheetClose>
-                  );
+                     const mainItem = (
+                        <div key={`${item.title}-trigger-${index}`} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
+                          {item.icon && <item.icon className="h-5 w-5" />}
+                          {item.title}
+                        </div>
+                     );
+                     // Ensure item.children is an array before mapping
+                     const childrenArray = Array.isArray(item.children) ? item.children : [];
+                     const childrenItems = childrenArray.map(child => (
+                        <SheetClose asChild key={`${child.title}-child-${index}`}>
+                          {renderNavLink({...child, title: `  ${child.title}`}, true)}
+                        </SheetClose>
+                     ));
+                     return [mainItem, ...childrenItems];
+                   }
+                   // Render non-dropdown items or dropdown items without children directly
+                   return (
+                     <SheetClose asChild key={`${item.title}-item-${index}`}>
+                       {renderNavLink(item, true)}
+                     </SheetClose>
+                   );
                 })}
               </nav>
             </SheetContent>
@@ -341,3 +350,5 @@ export default function Header() {
     </header>
   );
 }
+
+    

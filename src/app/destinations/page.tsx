@@ -1,3 +1,4 @@
+
 import type { Destination } from '@/lib/types';
 import DestinationCard from '@/components/cards/DestinationCard';
 import Header from '@/components/layout/Header';
@@ -5,6 +6,8 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from 'lucide-react';
+
+export const dynamic = 'force-dynamic'; // Ensures the page is dynamically rendered
 
 export default async function DestinationsPage() {
   const { data: destinations, error } = await supabase
@@ -52,3 +55,4 @@ export default async function DestinationsPage() {
     </div>
   );
 }
+
