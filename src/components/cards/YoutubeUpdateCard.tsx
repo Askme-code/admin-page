@@ -2,14 +2,20 @@
 "use client";
 
 import type { YoutubeUpdate } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown, CalendarDays, YoutubeIcon, ExternalLink } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, CalendarDays, YoutubeIcon, ExternalLink, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
+import { applyYoutubeInteractionDelta } from '@/app/actions/youtubeActions';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface YoutubeUpdateCardProps {
   update: YoutubeUpdate;
 }
+
+type UserInteraction = 'liked' | 'disliked' | 'none';
 
 // Helper function to extract YouTube video ID
 const getYouTubeVideoId = (url: string): string | null => {
@@ -20,7 +26,90 @@ const getYouTubeVideoId = (url: string): string | null => {
 
 export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
   const videoId = getYouTubeVideoId(update.url);
-  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '/images/placeholders/placeholder-600x400-video.png'; // Fallback placeholder
+  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '/images/placeholders/placeholder-600x400-video.png';
+
+  const { toast } = useToast();
+  const [localLikes, setLocalLikes] = useState(update.likes);
+  const [localDislikes, setLocalDislikes] = useState(update.dislikes);
+  const [userInteraction, setUserInteraction] = useState<UserInteraction>('none');
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  const getLocalStorageKey = useCallback(() => `youtube-interaction-${update.id}`, [update.id]);
+
+  useEffect(() => {
+    setLocalLikes(update.likes);
+    setLocalDislikes(update.dislikes);
+    const storedInteraction = localStorage.getItem(getLocalStorageKey()) as UserInteraction | null;
+    if (storedInteraction) {
+      setUserInteraction(storedInteraction);
+    } else {
+      setUserInteraction('none');
+    }
+  }, [update, getLocalStorageKey]);
+
+  const handleInteraction = async (interactionType: 'like' | 'dislike') => {
+    if (isInteracting) return;
+    setIsInteracting(true);
+
+    const previousInteraction = userInteraction;
+    let newInteractionState: UserInteraction;
+    let deltaLikes = 0;
+    let deltaDislikes = 0;
+
+    if (interactionType === 'like') {
+      if (previousInteraction === 'liked') { // Unliking
+        newInteractionState = 'none';
+        deltaLikes = -1;
+      } else { // Liking (either from 'none' or 'disliked')
+        newInteractionState = 'liked';
+        deltaLikes = 1;
+        if (previousInteraction === 'disliked') {
+          deltaDislikes = -1;
+        }
+      }
+    } else { // Disliking
+      if (previousInteraction === 'disliked') { // Undisliking
+        newInteractionState = 'none';
+        deltaDislikes = -1;
+      } else { // Disliking (either from 'none' or 'liked')
+        newInteractionState = 'disliked';
+        deltaDislikes = 1;
+        if (previousInteraction === 'liked') {
+          deltaLikes = -1;
+        }
+      }
+    }
+
+    // Optimistic UI update
+    setLocalLikes(prev => Math.max(0, prev + deltaLikes));
+    setLocalDislikes(prev => Math.max(0, prev + deltaDislikes));
+    setUserInteraction(newInteractionState);
+    localStorage.setItem(getLocalStorageKey(), newInteractionState);
+
+    const result = await applyYoutubeInteractionDelta({
+      updateId: update.id,
+      deltaLikes,
+      deltaDislikes,
+    });
+
+    if (!result.success) {
+      toast({
+        title: "Error",
+        description: result.message || "Could not update interaction.",
+        variant: "destructive",
+      });
+      // Revert optimistic update on error
+      setLocalLikes(prev => Math.max(0, prev - deltaLikes));
+      setLocalDislikes(prev => Math.max(0, prev - deltaDislikes));
+      setUserInteraction(previousInteraction);
+      localStorage.setItem(getLocalStorageKey(), previousInteraction);
+    } else {
+      // Optionally, update with server's final counts if they differ, though revalidation should handle it
+      if (result.finalLikes !== undefined) setLocalLikes(result.finalLikes);
+      if (result.finalDislikes !== undefined) setLocalDislikes(result.finalDislikes);
+    }
+    setIsInteracting(false);
+  };
 
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full bg-card/90 backdrop-blur-sm">
@@ -33,7 +122,6 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
             className="absolute inset-0 w-full h-full object-cover"
             data-ai-hint="youtube video thumbnail"
             onError={(e) => {
-              // Fallback if YouTube thumbnail fails to load
               (e.target as HTMLImageElement).src = '/images/placeholders/placeholder-600x400-video.png';
             }}
           />
@@ -55,12 +143,34 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
           <span>Posted on {format(new Date(update.post_date), "MMM d, yyyy")}</span>
         </div>
         <div className="flex items-center gap-4 pt-1">
-          <span className="flex items-center text-green-600">
-            <ThumbsUp className="mr-1 h-4 w-4" /> {update.likes}
-          </span>
-          <span className="flex items-center text-red-600">
-            <ThumbsDown className="mr-1 h-4 w-4" /> {update.dislikes}
-          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleInteraction('like')}
+            disabled={isInteracting}
+            className={cn(
+              "flex items-center px-2 py-1 h-auto",
+              userInteraction === 'liked' ? 'text-green-600' : 'text-muted-foreground hover:text-green-500'
+            )}
+            aria-label="Like this video"
+          >
+            {isInteracting && userInteraction === 'liked' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ThumbsUp className={cn("mr-1 h-4 w-4", userInteraction === 'liked' && 'fill-current')} />}
+            {localLikes}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleInteraction('dislike')}
+            disabled={isInteracting}
+            className={cn(
+              "flex items-center px-2 py-1 h-auto",
+              userInteraction === 'disliked' ? 'text-red-600' : 'text-muted-foreground hover:text-red-500'
+            )}
+            aria-label="Dislike this video"
+          >
+             {isInteracting && userInteraction === 'disliked' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ThumbsDown className={cn("mr-1 h-4 w-4", userInteraction === 'disliked' && 'fill-current')} />}
+            {localDislikes}
+          </Button>
         </div>
       </CardContent>
       <CardFooter>
