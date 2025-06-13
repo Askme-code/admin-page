@@ -53,13 +53,13 @@ export interface NavItem {
   href: string;
   icon?: React.ElementType;
   disabled?: boolean;
-  auth?: boolean; 
-  noAuth?: boolean; 
-  isDropdownTrigger?: boolean; 
-  children?: NavItem[]; 
-  action?: () => void; 
-  isSearch?: boolean; 
-  isButton?: boolean; 
+  auth?: boolean;
+  noAuth?: boolean;
+  isDropdownTrigger?: boolean;
+  children?: NavItem[];
+  action?: () => void;
+  isSearch?: boolean;
+  isButton?: boolean;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'; // Added variant
   key?: string; // Added for explicit keying in maps
   isInteractive?: boolean; // for mobile nav, to differentiate non-clickable dropdown triggers
@@ -99,7 +99,7 @@ export interface YoutubeUpdate {
 }
 
 export interface PublicUser {
-  id: string; 
+  id: string;
   full_name: string;
   email: string;
   phone?: string;
@@ -110,32 +110,32 @@ export interface PublicUser {
 }
 
 export interface Tour {
-  id: string; 
-  name: string;
-  description?: string | null;
-  location?: string | null;
-  price?: number | null;
-  duration_hours?: number | null;
-  image_url?: string | null;
-  status: 'available' | 'unavailable' | 'archived';
-  created_at: string;
+  id: string; // UUID, matches
+  title: string; // VARCHAR(150) NOT NULL, was 'name'
+  description?: string | null; // TEXT, matches
+  location?: string | null; // VARCHAR(100), matches
+  price?: number | null; // DECIMAL(10, 2), matches
+  image_url?: string | null; // TEXT, matches
+  available_dates?: string[] | null; // DATE[]
+  created_at: string; // TIMESTAMP, matches
+  updated_at: string; // TIMESTAMP, new field
 }
 
 export interface TourBooking {
-  id: number; 
-  user_id: string; 
+  id: number;
+  user_id: string;
   full_name: string;
   email: string;
   phone?: string | null;
-  tour_id: string; 
-  booking_date: string; 
-  tour_date: string; 
+  tour_id: string;
+  booking_date: string;
+  tour_date: string;
   number_of_people: number;
   notes?: string | null;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   total_price?: number | null;
   created_at: string;
   updated_at: string;
-  tours?: Tour; 
-  users?: PublicUser; 
+  tours?: Tour; // Changed from 'name' to 'title' implicitly by Tour update
+  users?: PublicUser;
 }
