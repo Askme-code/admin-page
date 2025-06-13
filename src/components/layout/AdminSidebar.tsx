@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image'; // Added Image import
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
@@ -13,7 +14,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { MountainSnow, LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home, MessageSquareText, Star, Youtube } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Map, CalendarClock, Lightbulb, LogOut, Home, MessageSquareText, Star, Youtube } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -55,7 +56,13 @@ export default function AdminSidebar() {
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="p-4">
         <Link href="/admin" className="flex items-center gap-2 font-headline text-lg font-semibold text-sidebar-foreground">
-          <MountainSnow className="h-7 w-7 text-primary" />
+          <Image 
+            src="/webicon/admin icon.png" 
+            alt="Admin Panel Icon" 
+            width={28} 
+            height={28} 
+            className="h-7 w-7"
+          />
           <span className="group-data-[collapsible=icon]:hidden">Admin Panel</span>
         </Link>
         <div className="md:hidden ml-auto"> 
