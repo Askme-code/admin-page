@@ -1,6 +1,7 @@
 
 "use client";
 import Link from 'next/link';
+import Image from 'next/image'; // Added Image import
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -8,7 +9,7 @@ import {
   SheetHeader,
   SheetClose,
   SheetTrigger,
-  SheetTitle // Added SheetTitle import
+  SheetTitle
 } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -19,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Menu, MountainSnow, LogOut, User, Search, ChevronDown, LogIn, UserPlus, Ticket, ListChecks, Newspaper, MapPin, Lightbulb, MessageSquare, Info, ChevronRight, HomeIcon, CalendarClock } from 'lucide-react';
+import { Menu, LogOut, User, Search, ChevronDown, LogIn, UserPlus, Ticket, ListChecks, Newspaper, MapPin, Lightbulb, MessageSquare, Info, ChevronRight, HomeIcon, CalendarClock } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -233,7 +234,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center gap-2 font-headline text-xl font-semibold" onClick={() => isSheetOpen && setIsSheetOpen(false)}>
-          <MountainSnow className="h-7 w-7 text-primary" />
+          <Image src="/webicon/website icon.png" alt="Tanzania Tourist Trails Logo" width={28} height={28} className="h-7 w-7" />
           <span className="hidden sm:inline">Tanzania Tourist Trails</span>
           <span className="sm:hidden">TTT</span>
         </Link>
@@ -312,7 +313,7 @@ export default function Header() {
               <SheetHeader className="mb-4 border-b pb-4 text-left">
                 <SheetTitle>
                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setIsSheetOpen(false)}>
-                    <MountainSnow className="h-7 w-7 text-primary" />
+                    <Image src="/webicon/website icon.png" alt="Tanzania Tourist Trails Logo" width={28} height={28} className="h-7 w-7" />
                     Tanzania Trails
                   </Link>
                 </SheetTitle>
@@ -352,4 +353,3 @@ export default function Header() {
     </header>
   );
 }
-

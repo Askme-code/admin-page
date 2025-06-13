@@ -3,10 +3,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // Added Image import
 import { supabase } from '@/lib/supabaseClient';
 import { BookingForm } from "@/components/forms/BookingForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MountainSnow, Ticket } from "lucide-react";
+import { Ticket } from "lucide-react";
 import type { PublicUser, Tour } from '@/lib/types';
 import { getCurrentUser } from '@/app/actions/userAuthActions';
 import { getAvailableTours } from '@/app/actions/bookingActions';
@@ -68,7 +69,7 @@ export default function BookingPage() {
       <Card className="max-w-2xl mx-auto shadow-xl">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
-            <MountainSnow className="h-10 w-10 text-primary" />
+            <Image src="/webicon/website icon.png" alt="Tanzania Tourist Trails Logo" width={40} height={40} className="h-10 w-10" />
           </Link>
           <CardTitle className="text-3xl font-headline flex items-center justify-center">
             <Ticket className="mr-3 h-8 w-8 text-primary" />

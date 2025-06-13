@@ -1,7 +1,7 @@
 
+import Image from 'next/image'; // Added Image import
 import { SignupForm } from "@/components/forms/SignupForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MountainSnow } from "lucide-react";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -10,7 +10,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
-            <MountainSnow className="h-12 w-12 text-primary" />
+            <Image src="/webicon/website icon.png" alt="Tanzania Tourist Trails Logo" width={48} height={48} className="h-12 w-12" />
           </Link>
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
           <CardDescription>Join Tanzania Tourist Trails to book tours and save your preferences.</CardDescription>
