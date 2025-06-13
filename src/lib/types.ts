@@ -53,13 +53,16 @@ export interface NavItem {
   href: string;
   icon?: React.ElementType;
   disabled?: boolean;
-  auth?: boolean; // Link shown only if authenticated
-  noAuth?: boolean; // Link shown only if NOT authenticated
-  isDropdownTrigger?: boolean; // Indicates this item is a trigger for a dropdown
-  children?: NavItem[]; // Sub-items for a dropdown
-  action?: () => void; // For items like Logout
-  isSearch?: boolean; // Special type for rendering search bar
-  isButton?: boolean; // Should it be styled as a button
+  auth?: boolean; 
+  noAuth?: boolean; 
+  isDropdownTrigger?: boolean; 
+  children?: NavItem[]; 
+  action?: () => void; 
+  isSearch?: boolean; 
+  isButton?: boolean; 
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'; // Added variant
+  key?: string; // Added for explicit keying in maps
+  isInteractive?: boolean; // for mobile nav, to differentiate non-clickable dropdown triggers
 }
 
 export interface UserFeedback {
@@ -95,13 +98,11 @@ export interface YoutubeUpdate {
   created_at: string;
 }
 
-// New types for User Auth and Booking
 export interface PublicUser {
-  id: string; // UUID from auth.users
+  id: string; 
   full_name: string;
   email: string;
   phone?: string;
-  // password_hash is managed by Supabase Auth, not directly handled in client/frontend types typically
   role: 'user' | 'admin';
   status: 'active' | 'suspended' | 'pending_verification';
   created_at: string;
@@ -109,7 +110,7 @@ export interface PublicUser {
 }
 
 export interface Tour {
-  id: string; // UUID
+  id: string; 
   name: string;
   description?: string | null;
   location?: string | null;
@@ -121,20 +122,20 @@ export interface Tour {
 }
 
 export interface TourBooking {
-  id: number; // Serial
-  user_id: string; // UUID, references auth.users(id)
+  id: number; 
+  user_id: string; 
   full_name: string;
   email: string;
   phone?: string | null;
-  tour_id: string; // UUID, references tours(id)
-  booking_date: string; // Date
-  tour_date: string; // Date
+  tour_id: string; 
+  booking_date: string; 
+  tour_date: string; 
   number_of_people: number;
   notes?: string | null;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   total_price?: number | null;
   created_at: string;
   updated_at: string;
-  tours?: Tour; // For joining data
-  users?: PublicUser; // For joining data, if needed (though user_id links to auth.users)
+  tours?: Tour; 
+  users?: PublicUser; 
 }
