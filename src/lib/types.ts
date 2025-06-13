@@ -111,31 +111,31 @@ export interface PublicUser {
 
 export interface Tour {
   id: string; // UUID, matches
-  title: string; // VARCHAR(150) NOT NULL, was 'name'
+  title: string; // VARCHAR(150) NOT NULL
   description?: string | null; // TEXT, matches
   location?: string | null; // VARCHAR(100), matches
   price?: number | null; // DECIMAL(10, 2), matches
   image_url?: string | null; // TEXT, matches
   available_dates?: string[] | null; // DATE[]
   created_at: string; // TIMESTAMP, matches
-  updated_at: string; // TIMESTAMP, new field
+  updated_at: string; // TIMESTAMP
 }
 
 export interface TourBooking {
-  id: number;
-  user_id: string;
-  full_name: string;
-  email: string;
-  phone?: string | null;
-  tour_id: string;
-  booking_date: string;
-  tour_date: string;
-  number_of_people: number;
-  notes?: string | null;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  total_price?: number | null;
-  created_at: string;
-  updated_at: string;
-  tours?: Tour; // Changed from 'name' to 'title' implicitly by Tour update
-  users?: PublicUser;
+  id: number; // SERIAL PRIMARY KEY
+  user_id: string; // UUID REFERENCES users(id)
+  full_name: string; // VARCHAR(100) NOT NULL
+  email: string; // VARCHAR(100) NOT NULL
+  phone?: string | null; // VARCHAR(20)
+  tour_id: string; // UUID NOT NULL REFERENCES tours(id)
+  booking_date: string; // DATE DEFAULT CURRENT_DATE
+  tour_date: string; // DATE NOT NULL
+  number_of_people: number; // INT DEFAULT 1
+  notes?: string | null; // TEXT
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'; // VARCHAR(20) DEFAULT 'pending'
+  total_price?: number | null; // This field is in bookingActions.ts, assuming it's in the table or desired.
+  created_at: string; // TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: string; // TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  tours?: Tour; // Relation to Tour table
+  users?: PublicUser; // Relation to User table
 }
