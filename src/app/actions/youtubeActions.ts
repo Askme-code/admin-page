@@ -1,3 +1,4 @@
+
 'use server';
 
 import { supabase } from '@/lib/supabaseClient';
@@ -52,3 +53,4 @@ export async function applyYoutubeInteractionDelta({
     return { success: false, message: (e as Error).message || 'An unexpected server error occurred while updating interaction.' };
   }
 }
+

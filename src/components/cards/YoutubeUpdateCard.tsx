@@ -40,12 +40,17 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
     setLocalLikes(update.likes);
     setLocalDislikes(update.dislikes);
     const storedInteraction = localStorage.getItem(getLocalStorageKey()) as UserInteraction | null;
-    if (storedInteraction) {
+    
+    if (storedInteraction && ['liked', 'disliked', 'none'].includes(storedInteraction)) {
       setUserInteraction(storedInteraction);
     } else {
       setUserInteraction('none');
+      // Initialize localStorage if the value is invalid or not set
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(getLocalStorageKey(), 'none');
+      }
     }
-  }, [update, getLocalStorageKey]);
+  }, [update.id, update.likes, update.dislikes, getLocalStorageKey]);
 
   const handleInteraction = async (interactionType: 'like' | 'dislike') => {
     if (isInteracting) return;
@@ -84,10 +89,12 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
     setLocalLikes(prev => Math.max(0, prev + deltaLikes));
     setLocalDislikes(prev => Math.max(0, prev + deltaDislikes));
     setUserInteraction(newInteractionState);
-    localStorage.setItem(getLocalStorageKey(), newInteractionState);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey(), newInteractionState);
+    }
 
     const result = await applyYoutubeInteractionDelta({
-      updateId: update.id,
+      updateId: update.id, // update.id is already string type as per YoutubeUpdate interface
       deltaLikes,
       deltaDislikes,
     });
@@ -102,7 +109,9 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
       setLocalLikes(prev => Math.max(0, prev - deltaLikes));
       setLocalDislikes(prev => Math.max(0, prev - deltaDislikes));
       setUserInteraction(previousInteraction);
-      localStorage.setItem(getLocalStorageKey(), previousInteraction);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(getLocalStorageKey(), previousInteraction);
+      }
     } else {
       // Optionally, update with server's final counts if they differ, though revalidation should handle it
       if (result.finalLikes !== undefined) setLocalLikes(result.finalLikes);
@@ -183,3 +192,4 @@ export default function YoutubeUpdateCard({ update }: YoutubeUpdateCardProps) {
     </Card>
   );
 }
+

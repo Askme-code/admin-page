@@ -27,11 +27,13 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         {children}
         <Toaster />
+        {/* 
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5805028999017949"
           strategy="lazyOnload"
           crossOrigin="anonymous"
-        />
+        /> 
+        */}
       </body>
     </html>
   );
