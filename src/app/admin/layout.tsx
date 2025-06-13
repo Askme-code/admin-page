@@ -9,38 +9,59 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
-// To make a user an admin, their 'role' in the 'public.users' table
-// must be set to 'admin'. New users get 'user' by default via the
-// on_auth_user_created trigger. You can update this manually in Supabase
-// or via SQL, e.g.:
-// UPDATE public.users SET role = 'admin' WHERE email = 'your-admin-email@example.com';
+// ============================================================================
+// IMPORTANT: Admin Access Control
+// ============================================================================
+// To make a user an administrator for this application, their 'role'
+// in the 'public.users' table MUST be set to 'admin'.
+//
+// How it works:
+// 1. Users sign up/log in via Supabase Auth (auth.users table).
+// 2. A Supabase trigger ('on_auth_user_created') should copy the new user
+//    from 'auth.users' to 'public.users' and assign a default role (e.g., 'user').
+// 3. To grant admin privileges:
+//    - Manually update the 'role' column in the 'public.users' table for the
+//      desired user to 'admin'. You can do this via the Supabase dashboard table editor
+//      or using SQL like:
+//      UPDATE public.users SET role = 'admin' WHERE email = 'your-admin-email@example.com';
+//    - Ensure the email matches the one in auth.users.
+//
+// This `checkAdminRole` function is called by the AdminLayout to verify if the
+// currently logged-in user has the 'admin' role in the 'public.users' table.
+//
+// For database-level security (e.g., only admins can write to certain tables),
+// you should use Row Level Security (RLS) policies in Supabase.
+// These RLS policies can use a SQL helper function like `public.is_admin()`
+// which checks `auth.uid()` against the `public.users` table.
+// ============================================================================
 async function checkAdminRole(user_id: string | undefined): Promise<boolean> {
   if (!user_id) {
-    console.log("AdminLayout: Admin check - No user_id provided, user is not admin.");
+    console.log("AdminLayout: Admin check - No user_id provided. User is not admin.");
     return false;
   }
   
-  console.log(`AdminLayout: Admin check - Checking role for user_id ${user_id}`);
+  console.log(`AdminLayout: Admin check - Verifying role for user_id: ${user_id} in 'public.users' table.`);
   const { data, error } = await supabase
-    .from('users') 
+    .from('users') // This refers to 'public.users'
     .select('role')
     .eq('id', user_id)
     .single();
 
-  if (error && error.code !== 'PGRST116') { 
+  if (error && error.code !== 'PGRST116') { // PGRST116 means 0 rows found, which is a valid case (user not in public.users or no profile yet)
     console.error(`AdminLayout: Admin check - Error fetching user role for user_id ${user_id}:`, error.message);
     return false;
   }
 
   if (!data) {
-    console.warn(`AdminLayout: Admin check - No profile found in public.users for user_id ${user_id}. User is not admin. Ensure the user exists in public.users and their 'role' is set.`);
+    console.warn(`AdminLayout: Admin check - No profile found in 'public.users' table for user_id ${user_id}. User cannot be admin. Ensure the user exists in 'public.users' and their 'role' is set.`);
     return false;
   }
 
   const isAdmin = data.role === 'admin';
-  console.log(`AdminLayout: Admin check - User ${user_id} role is '${data.role}'. Is admin: ${isAdmin}.`);
+  console.log(`AdminLayout: Admin check - User ${user_id} role from 'public.users' is '${data.role}'. Is admin: ${isAdmin}.`);
+  
   if (!isAdmin && process.env.NODE_ENV === 'development') {
-    console.warn(`AdminLayout: Admin check - User ${user_id} is NOT an admin. To grant access, update their role to 'admin' in the 'public.users' table.`);
+    console.warn(`AdminLayout: Admin check - User ${user_id} is NOT an admin. To grant access, update their 'role' to 'admin' in the 'public.users' table in your Supabase database.`);
   }
   return isAdmin;
 }
@@ -53,94 +74,89 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [session, setSession] = useState<Session | null | undefined>(undefined); // undefined means initial loading state
+  const [session, setSession] = useState<Session | null | undefined>(undefined); 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const getSessionAndRole = async () => {
-      console.log("AdminLayout: Initial session and role check started.");
-      setIsLoading(true); // Start loading
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      console.log("AdminLayout: Initializing session and role check...");
+      setIsLoading(true);
+      
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error("AdminLayout: Error getting session:", error.message);
+      if (sessionError) {
+        console.error("AdminLayout: Error fetching session:", sessionError.message);
         setSession(null);
         setIsAdmin(false);
-        if (pathname.startsWith('/admin') && pathname !== '/login') {
-          console.log("AdminLayout: Session error, redirecting to /login from", pathname);
-          router.push('/login');
-        }
       } else if (currentSession) {
-        console.log("AdminLayout: Session found, user:", currentSession.user?.email);
+        console.log("AdminLayout: Session found for user:", currentSession.user?.email);
         setSession(currentSession);
         const isAdminUser = await checkAdminRole(currentSession.user?.id);
         setIsAdmin(isAdminUser);
-        if (isAdminUser) {
-          if (pathname === '/login') {
-            console.log("AdminLayout: Admin on /login, redirecting to /admin");
-            router.push('/admin');
-          }
-        } else { // Has session, but not admin
-          if (pathname.startsWith('/admin') && pathname !== '/login') {
-            console.log("AdminLayout: Non-admin user on admin page, redirecting to /login from", pathname);
-            router.push('/login'); 
-          }
-        }
-      } else { // No session
-        console.log("AdminLayout: No session found.");
+      } else {
+        console.log("AdminLayout: No active session found.");
         setSession(null);
         setIsAdmin(false);
-        if (pathname.startsWith('/admin') && pathname !== '/login') {
-          console.log("AdminLayout: No session, redirecting to /login from", pathname);
-          router.push('/login');
-        }
       }
-      setIsLoading(false); // End loading
-      console.log("AdminLayout: Initial session and role check finished. isLoading:", false, "isAdmin:", isAdmin, "session:", !!currentSession);
+      setIsLoading(false);
+      console.log(`AdminLayout: Initial check complete. isLoading: ${false}, isAdmin: ${isAdmin}, session: ${!!currentSession}`);
     };
 
     getSessionAndRole();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log("AdminLayout: Auth state changed, event:", event, "newSession user:", newSession?.user?.email);
-      setIsLoading(true); // Start loading
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      console.log("AdminLayout: Auth state changed. Event:", _event, "New session user:", newSession?.user?.email);
+      setIsLoading(true);
       setSession(newSession);
-      if (newSession) {
-        const isAdminUser = await checkAdminRole(newSession.user?.id);
+      if (newSession?.user) {
+        const isAdminUser = await checkAdminRole(newSession.user.id);
         setIsAdmin(isAdminUser);
-        if (isAdminUser) {
-          if (pathname === '/login') {
-            console.log("AdminLayout: AuthChange - Admin logged in on /login, redirecting to /admin");
-            router.push('/admin');
-          }
-        } else {
-          if (pathname.startsWith('/admin') && pathname !== '/login') {
-            console.log("AdminLayout: AuthChange - Session changed to non-admin, on admin page, redirecting to /login from", pathname);
-            router.push('/login');
-          }
-        }
-      } else { // Logged out
-        console.log("AdminLayout: AuthChange - Session ended (logged out).");
+      } else {
+        console.log("AdminLayout: AuthChange - Session ended (user logged out or token expired).");
         setIsAdmin(false);
-        if (pathname.startsWith('/admin') && pathname !== '/login') {
-          console.log("AdminLayout: AuthChange - Logged out, on admin page, redirecting to /login from", pathname);
-          router.push('/login');
-        }
       }
-      setIsLoading(false); // End loading
-      console.log("AdminLayout: Auth state change processing finished. isLoading:", false, "isAdmin:", isAdmin, "session:", !!newSession);
+      setIsLoading(false);
+      console.log(`AdminLayout: Auth state change processing finished. isLoading: ${false}, isAdmin: ${isAdmin}, session: ${!!newSession}`);
     });
 
     return () => {
       authListener?.subscription.unsubscribe();
       console.log("AdminLayout: Auth listener unsubscribed.");
     };
-  }, [router, pathname]); // Intentionally not including isAdmin and session to avoid re-triggering excessively. Pathname and router are the main drivers for re-evaluation.
+  }, [isAdmin]); // Re-run if isAdmin changes to ensure redirection logic is evaluated correctly
+
+  // This effect handles redirection based on the derived isAdmin and session states
+  useEffect(() => {
+    if (isLoading) return; // Don't redirect while initial checks are pending
+
+    console.log(`AdminLayout: Evaluating redirection. Path: ${pathname}, isLoading: ${isLoading}, isAdmin: ${isAdmin}, session: ${!!session}`);
+
+    if (!session) { // No session at all
+      if (pathname.startsWith('/admin') && pathname !== '/login') {
+        console.log("AdminLayout: No session, on admin page (not /login). Redirecting to /login.");
+        router.push('/login');
+      }
+    } else { // Has session
+      if (isAdmin) {
+        if (pathname === '/login') {
+          console.log("AdminLayout: Admin is on /login page. Redirecting to /admin.");
+          router.push('/admin');
+        }
+        // If admin and on an /admin/* path, they are allowed.
+      } else { // Has session but NOT admin
+        if (pathname.startsWith('/admin') && pathname !== '/login') {
+          console.log("AdminLayout: User has session but is NOT admin, on admin page (not /login). Redirecting to /login (or consider a 'forbidden' page).");
+          // router.push('/forbidden'); // Or show a forbidden page
+          router.push('/login'); // For now, redirect to login to allow re-attempt with admin creds
+        }
+      }
+    }
+  }, [isLoading, session, isAdmin, pathname, router]);
 
 
-  if (isLoading || session === undefined) { // Show loading skeleton if isLoading or session is 'undefined' (truly initial state)
-    console.log("AdminLayout: Rendering loading skeleton. isLoading:", isLoading, "session:", session);
+  if (isLoading || session === undefined) { 
+    console.log("AdminLayout: Rendering loading skeleton. isLoading:", isLoading, "session state:", session === undefined ? "initial" : (session ? "exists" : "null"));
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="space-y-4 p-8">
@@ -152,16 +168,13 @@ export default function AdminLayout({
     );
   }
 
-  // If on the login page, always render its content (children)
-  // The useEffect above will handle redirecting an already logged-in admin away from /login
   if (pathname === '/login') {
-    console.log("AdminLayout: Rendering /login page contents.");
+    console.log("AdminLayout: Rendering /login page contents directly.");
     return <>{children}</>;
   }
   
-  // If we have a session and the user is an admin, render the admin layout
   if (session && isAdmin) {
-    console.log("AdminLayout: User is admin, rendering admin content for path:", pathname);
+    console.log("AdminLayout: User is admin and has session. Rendering admin content for path:", pathname);
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-screen bg-background">
@@ -174,9 +187,6 @@ export default function AdminLayout({
     );
   }
   
-  // If none of the above conditions are met (e.g., not loading, not on /login, not admin with session),
-  // it means a redirect should have happened or is in progress. Render null to avoid flashing content.
-  // The useEffect should handle pushing to /login if necessary.
-  console.log("AdminLayout: Conditions not met for rendering admin content or login page. Pathname:", pathname, "isLoading:", isLoading, "isAdmin:", isAdmin, "session:", !!session, "Redirect likely occurred or pending.");
+  console.log(`AdminLayout: Conditions for rendering admin content or login page not fully met, or redirect is pending. Path: ${pathname}, isLoading: ${isLoading}, isAdmin: ${isAdmin}, session: ${!!session}. Rendering null or redirecting.`);
   return null; 
 }
