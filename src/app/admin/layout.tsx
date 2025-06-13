@@ -9,6 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
+// To make a user an admin, their 'role' in the 'public.users' table
+// must be set to 'admin'. New users get 'user' by default via the
+// on_auth_user_created trigger. You can update this manually in Supabase
+// or via SQL, e.g.:
+// UPDATE public.users SET role = 'admin' WHERE email = 'your-admin-email@example.com';
 async function checkAdminRole(user_id: string | undefined): Promise<boolean> {
   if (!user_id) {
     console.log("Admin check: No user_id provided, user is not admin.");
@@ -27,13 +32,13 @@ async function checkAdminRole(user_id: string | undefined): Promise<boolean> {
   }
 
   if (!data) {
-    console.warn(`Admin check: No profile found in public.users for user_id ${user_id}. User is not admin.`);
+    console.warn(`Admin check: No profile found in public.users for user_id ${user_id}. User is not admin. Ensure the user exists in public.users and their 'role' is set.`);
     return false;
   }
 
   const isAdmin = data.role === 'admin';
   if (process.env.NODE_ENV === 'development') {
-    console.log(`Admin check: User ${user_id} role is '${data.role}'. Is admin: ${isAdmin}`);
+    console.log(`Admin check: User ${user_id} role is '${data.role}'. Is admin: ${isAdmin}. If not admin and should be, ensure role is 'admin' in public.users table.`);
   }
   return isAdmin;
 }
@@ -135,3 +140,4 @@ export default function AdminLayout({
   
   return null; 
 }
+
