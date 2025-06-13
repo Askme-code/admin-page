@@ -7,7 +7,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTrigger,
-  SheetClose
+  SheetClose // Added SheetClose import
 } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -28,14 +28,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { PublicUser } from '@/lib/types';
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
 
 const mainNavLinks: NavItem[] = [
   { title: 'Home', href: '/', icon: HomeIcon },
   {
     title: 'Update',
-    href: '#',
+    href: '#', 
     isDropdownTrigger: true,
-    icon: Newspaper,
+    icon: Newspaper, 
     children: [
       { title: 'Articles', href: '/articles', icon: Newspaper },
       { title: 'Destinations', href: '/destinations', icon: MapPin },
@@ -44,7 +45,7 @@ const mainNavLinks: NavItem[] = [
     ],
   },
   { title: 'Feedback', href: '/#feedback-section', icon: MessageSquare },
-  { title: 'About', href: '/plan-your-visit', icon: Info },
+  { title: 'About', href: '/about', icon: Info },
 ];
 
 const authenticatedUserNavLinks: NavItem[] = [
@@ -59,6 +60,7 @@ const guestNavLinks: NavItem[] = [
 
 
 export default function Header() {
+  const isMobile = useIsMobile(); // Define isMobile using the hook
   const [session, setSession] = useState<Session | null>(null);
   const [currentUser, setCurrentUser] = useState<PublicUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,13 +71,14 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCurrentUser = useCallback(async () => {
-    const currentSessionData = await supabase.auth.getSession();
-    if (currentSessionData?.data.session?.user) {
+    const { data: { session: currentSessionData } } = await supabase.auth.getSession();
+    if (currentSessionData?.user) {
         const userProfile = await getCurrentUser();
         setCurrentUser(userProfile);
     } else {
         setCurrentUser(null);
     }
+    setIsLoading(false); // Ensure loading is set to false after fetching
   }, []);
 
 
@@ -88,26 +91,27 @@ export default function Header() {
         await fetchCurrentUser();
       } else {
         setCurrentUser(null);
+        setIsLoading(false); // Set loading false if no user
       }
-      setIsLoading(false);
     };
     getSessionAndUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setIsLoading(true);
       setSession(newSession);
       if (newSession?.user) {
         await fetchCurrentUser();
       } else {
         setCurrentUser(null);
+        setIsLoading(false); // Set loading false if no new session user
       }
-       if (_event === 'SIGNED_OUT' && (pathname.startsWith('/booking') || pathname.startsWith('/my-bookings') )) {
+       if (event === 'SIGNED_OUT' && (pathname.startsWith('/booking') || pathname.startsWith('/my-bookings') )) {
         router.push('/login-user');
       }
-      if (_event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
+      if (event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
         router.push('/');
       }
-      setIsLoading(false);
+      // setIsLoading(false); // This was potentially moved into fetchCurrentUser or its else block
     });
 
     return () => {
@@ -120,7 +124,7 @@ export default function Header() {
     const result = await signOutUser();
     if (result.success) {
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      setCurrentUser(null);
+      setCurrentUser(null); 
       router.push('/');
       router.refresh();
     } else {
@@ -131,14 +135,13 @@ export default function Header() {
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      toast({ title: "Search Submitted", description: `You searched for: ${searchQuery}` });
-      // Future: router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      toast({ title: "Search Submitted (UI Only)", description: `You searched for: ${searchQuery}` });
       setSearchQuery("");
       if (isSheetOpen) setIsSheetOpen(false);
     }
   };
 
-  const renderNavLink = (item: NavItem, isMobile = false) => {
+  const renderNavLink = (item: NavItem, isMobileParam = false) => {
     const commonClasses = "text-sm font-medium transition-colors hover:text-primary";
     const mobileLinkClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary";
     const desktopLinkClasses = `text-foreground/70 ${commonClasses}`;
@@ -150,18 +153,18 @@ export default function Header() {
             <Button
               variant="ghost"
               className={cn(
-                isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses,
+                isMobileParam ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses,
                 "flex items-center"
               )}
             >
-              {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+              {isMobileParam && item.icon && <item.icon className="h-5 w-5" />}
               {item.title}
-              <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform duration-200", {"group-data-[state=open]:rotate-180": !isMobile})} />
+              <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform duration-200", {"group-data-[state=open]:rotate-180": !isMobileParam})} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={isMobile ? "start" : "center"} className="w-56">
+          <DropdownMenuContent align={isMobileParam ? "start" : "center"} className="w-56">
             {item.children.map((child) => (
-              <DropdownMenuItem key={child.title} asChild onClick={() => isMobile && setIsSheetOpen(false)}>
+              <DropdownMenuItem key={child.title} asChild onClick={() => isMobileParam && setIsSheetOpen(false)}>
                 <Link href={child.href} className="flex items-center gap-2">
                   {child.icon && <child.icon className="h-4 w-4 text-muted-foreground" />}
                   {child.title}
@@ -175,7 +178,7 @@ export default function Header() {
 
     if (item.isButton) {
        return (
-         <Button variant={isMobile ? "ghost" : "default"} size="sm" asChild className={isMobile ? "w-full justify-start px-3 py-2 " + mobileLinkClasses : ""} onClick={() => isMobile && setIsSheetOpen(false)}>
+         <Button variant={isMobileParam ? "ghost" : "default"} size="sm" asChild className={isMobileParam ? "w-full justify-start px-3 py-2 " + mobileLinkClasses : ""} onClick={() => isMobileParam && setIsSheetOpen(false)}>
             <Link href={item.href}>
               {item.icon && <item.icon className="mr-2 h-4 w-4" />}
               {item.title}
@@ -186,8 +189,8 @@ export default function Header() {
 
     if (item.action) {
        return (
-        <Button variant="ghost" className={isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses} onClick={() => {item.action!(); if (isMobile) setIsSheetOpen(false);}}>
-            {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+        <Button variant="ghost" className={isMobileParam ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses} onClick={() => {item.action!(); if (isMobileParam) setIsSheetOpen(false);}}>
+            {isMobileParam && item.icon && <item.icon className="h-5 w-5" />}
             {item.title}
         </Button>
        );
@@ -196,25 +199,30 @@ export default function Header() {
     return (
       <Link
         href={item.href}
-        className={isMobile ? mobileLinkClasses : desktopLinkClasses}
-        onClick={() => isMobile && setIsSheetOpen(false)}
+        className={isMobileParam ? mobileLinkClasses : desktopLinkClasses}
+        onClick={() => isMobileParam && setIsSheetOpen(false)}
       >
-        {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+        {isMobileParam && item.icon && <item.icon className="h-5 w-5" />}
         {item.title}
       </Link>
     );
   };
 
-  const mobileNavItems: NavItem[] = mainNavLinks.flatMap(item => {
+  const mobileNavItems: NavItem[] = mainNavLinks.flatMap((item, itemIndex) => {
     if (item.isDropdownTrigger && item.children) {
       const childrenArray = Array.isArray(item.children) ? item.children : [];
-      const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` }));
-      return [item, ...mappedChildren];
+      const triggerItem = { ...item, title: item.title, key: `${item.title}-trigger-${itemIndex}`, isInteractive: false, href: '#' };
+      const mappedChildren = childrenArray.map((c, childIndex) => ({
+        ...c,
+        title: `  ${c.title}`, 
+        key: `${item.title}-child-${childIndex}` 
+      }));
+      return [triggerItem, ...mappedChildren];
     }
-    return [item];
+    return [{ ...item, key: `${item.title}-item-${itemIndex}` }];
   }).concat(
-    session ? authenticatedUserNavLinks : [],
-    session ? [{ title: "Logout", href: "#", icon: LogOut, action: handleLogout }] : guestNavLinks
+    session ? authenticatedUserNavLinks.map((item, index) => ({...item, key: `auth-item-${index}`})) : [],
+    session ? [{ title: "Logout", href: "#", icon: LogOut, action: handleLogout, key: "logout-action" }] : guestNavLinks.map((item, index) => ({...item, key: `guest-item-${index}`}))
   );
 
 
@@ -229,7 +237,7 @@ export default function Header() {
 
         <nav className="hidden md:flex flex-grow items-center gap-4 lg:gap-6">
           {mainNavLinks.map((item) => (
-            <div key={item.title}>{renderNavLink(item)}</div>
+            <div key={item.title}>{renderNavLink(item, false)}</div>
           ))}
           <div className="flex-grow" /> {}
 
@@ -249,7 +257,7 @@ export default function Header() {
           ) : session ? (
             <>
               {authenticatedUserNavLinks.filter(item => item.isButton).map((item) => (
-                 <div key={item.title} className="ml-2">{renderNavLink(item)}</div>
+                 <div key={item.title} className="ml-2">{renderNavLink(item, false)}</div>
               ))}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -282,7 +290,7 @@ export default function Header() {
             </>
           ) : (
             guestNavLinks.map((item) => (
-              <div key={item.title} className="ml-2">{renderNavLink(item)}</div>
+              <div key={item.title} className="ml-2">{renderNavLink(item, false)}</div>
             ))
           )}
         </nav>
@@ -315,24 +323,19 @@ export default function Header() {
                 />
               </form>
               <nav className="grid gap-1 text-base font-medium">
-                {mobileNavItems.map((item, index) => {
-                   if (item.isDropdownTrigger && item.children) {
-                     const mainItem = (
-                        <div key={`${item.title}-trigger-${index}`} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
+                 {mobileNavItems.map((item) => {
+                   const itemKey = (item as any).key || item.title; 
+
+                   if (item.isDropdownTrigger && item.children && true) { 
+                     return (
+                        <div key={itemKey} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
                           {item.icon && <item.icon className="h-5 w-5" />}
                           {item.title}
                         </div>
                      );
-                     const childrenArray = Array.isArray(item.children) ? item.children : [];
-                     const childrenItems = childrenArray.map((child, childIndex) => (
-                        <SheetClose asChild key={`${child.title}-child-${index}-${childIndex}`}>
-                          {renderNavLink({...child, title: `  ${child.title}`}, true)}
-                        </SheetClose>
-                     ));
-                     return [mainItem, ...childrenItems];
                    }
                    return (
-                     <SheetClose asChild key={`${item.title}-item-${index}`}>
+                     <SheetClose asChild key={itemKey}>
                        {renderNavLink(item, true)}
                      </SheetClose>
                    );
@@ -345,3 +348,6 @@ export default function Header() {
     </header>
   );
 }
+    
+
+    
