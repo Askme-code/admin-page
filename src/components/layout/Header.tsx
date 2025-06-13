@@ -34,18 +34,17 @@ const mainNavLinks: NavItem[] = [
   { title: 'Home', href: '/', icon: HomeIcon },
   {
     title: 'Update',
-    href: '#', // Main link for "Update" itself, can be non-navigable if it's just a trigger
+    href: '#', 
     isDropdownTrigger: true,
-    icon: Newspaper, // Example icon for the main "Update" trigger
+    icon: Newspaper, 
     children: [
-      { title: 'News', href: '/articles', icon: Newspaper }, // Assuming News links to articles for now
       { title: 'Articles', href: '/articles', icon: Newspaper },
       { title: 'Destinations', href: '/destinations', icon: MapPin },
       { title: 'Travel Tips', href: '/travel-tips', icon: Lightbulb },
     ],
   },
   { title: 'Feedback', href: '/#feedback-section', icon: MessageSquare },
-  { title: 'About', href: '/plan-your-visit', icon: Info }, // Assuming About links to plan-your-visit
+  { title: 'About', href: '/plan-your-visit', icon: Info }, 
 ];
 
 const authenticatedUserNavLinks: NavItem[] = [
@@ -204,9 +203,8 @@ export default function Header() {
   const mobileNavItems: NavItem[] = [
     ...mainNavLinks.flatMap(item => {
       if (item.isDropdownTrigger && item.children) {
-        // Ensure item.children is actually an array before mapping
         const childrenArray = Array.isArray(item.children) ? item.children : [];
-        const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` })); // Indent children titles
+        const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` }));
         return [item, ...mappedChildren];
       } else {
         return [item];
