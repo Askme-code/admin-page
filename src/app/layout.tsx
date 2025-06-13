@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import Script from 'next/script'; // Import next/script
 
 export const metadata: Metadata = {
   title: 'Tanzania Tourist Trails',
@@ -20,18 +21,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
-        {/* This link correctly points to /favicon.ico, which should be served from the /public directory. */}
         <link rel="icon" href="/favicon.ico" sizes="any" type="image/x-icon" />
-        {/* Google AdSense script */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5805028999017949"
-          crossOrigin="anonymous"
-        ></script>
+        {/* Google AdSense script loaded with next/script */}
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
         {children}
         <Toaster />
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5805028999017949"
+          strategy="lazyOnload"
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   );
