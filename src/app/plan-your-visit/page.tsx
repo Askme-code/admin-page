@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Plane, Ship, Car, BedDouble, Phone, Mail, MessageSquare, Facebook, Instagram, ArrowRight, UserPlus } from 'lucide-react';
+import { Plane, Ship, Car, BedDouble, Phone, Mail, MessageSquare, Facebook, Instagram, ArrowRight, UserPlus, Ticket } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const hotelList = [
@@ -175,3 +175,4 @@ export default function PlanYourVisitPage() {
     </div>
   );
 }
+
