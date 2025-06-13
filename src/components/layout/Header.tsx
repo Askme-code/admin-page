@@ -2,146 +2,291 @@
 "use client";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, MountainSnow, LogOut, LogIn, UserPlus, Ticket, ListChecks } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Menu, MountainSnow, LogOut, User, Search, ChevronDown, LogIn, UserPlus, Ticket, ListChecks, Newspaper, MapPin, Lightbulb, MessageSquare, Info, ChevronRight, HomeIcon } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import type { Session } from '@supabase/supabase-js';
-import { signOutUser } from '@/app/actions/userAuthActions';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { signOutUser, getCurrentUser } from '@/app/actions/userAuthActions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import type { PublicUser } from '@/lib/types';
 
-const baseNavItems: NavItem[] = [
-  { title: 'Home', href: '/' },
-  { title: 'Articles', href: '/articles' },
-  { title: 'Destinations', href: '/destinations' },
-  { title: 'Events', href: '/events' },
-  { title: 'Travel Tips', href: '/travel-tips' },
-  { title: 'Plan Your Visit', href: '/plan-your-visit' },
+const mainNavLinks: NavItem[] = [
+  { title: 'Home', href: '/', icon: HomeIcon },
+  {
+    title: 'Update',
+    href: '#', // Main link for "Update" itself, can be non-navigable if it's just a trigger
+    isDropdownTrigger: true,
+    icon: Newspaper, // Example icon for the main "Update" trigger
+    children: [
+      { title: 'News', href: '/articles', icon: Newspaper }, // Assuming News links to articles for now
+      { title: 'Articles', href: '/articles', icon: Newspaper },
+      { title: 'Destinations', href: '/destinations', icon: MapPin },
+      { title: 'Travel Tips', href: '/travel-tips', icon: Lightbulb },
+    ],
+  },
+  { title: 'Feedback', href: '/#feedback-section', icon: MessageSquare },
+  { title: 'About', href: '/plan-your-visit', icon: Info }, // Assuming About links to plan-your-visit
 ];
 
-const authNavItems: NavItem[] = [
-  { title: 'Book a Tour', href: '/booking', auth: true },
-  { title: 'My Bookings', href: '/my-bookings', auth: true },
-  { title: 'Feedback', href: '/#feedback-section' },
+const authenticatedUserNavLinks: NavItem[] = [
+  { title: 'My Bookings', href: '/my-bookings', icon: ListChecks, auth: true },
+  { title: 'Book a Tour', href: '/booking', icon: Ticket, auth: true, isButton: true },
 ];
 
-const noAuthNavItems: NavItem[] = [
-  { title: 'Log In', href: '/login-user', noAuth: true, icon: LogIn },
-  { title: 'Sign Up', href: '/signup', noAuth: true, icon: UserPlus },
+const guestNavLinks: NavItem[] = [
+  { title: 'Register', href: '/signup', icon: UserPlus, noAuth: true, isButton: true },
+  { title: 'Login', href: '/login-user', icon: LogIn, noAuth: true, isButton: true },
 ];
-
-const adminNavItem: NavItem = { title: 'Admin Panel', href: '/admin' };
 
 
 export default function Header() {
   const [session, setSession] = useState<Session | null>(null);
+  const [currentUser, setCurrentUser] = useState<PublicUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchCurrentUser = useCallback(async () => {
+    if (session?.user) {
+      const userProfile = await getCurrentUser();
+      setCurrentUser(userProfile);
+    } else {
+      setCurrentUser(null);
+    }
+  }, [session?.user]);
 
   useEffect(() => {
-    const getSession = async () => {
+    const getSessionAndUser = async () => {
+      setIsLoading(true);
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
+      if (currentSession?.user) {
+        await fetchCurrentUser();
+      } else {
+        setCurrentUser(null);
+      }
       setIsLoading(false);
     };
-    getSession();
+    getSessionAndUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
-      setIsLoading(false);
-      if (event === 'SIGNED_OUT' && (pathname.startsWith('/booking') || pathname.startsWith('/my-bookings') )) {
+      if (newSession?.user) {
+        await fetchCurrentUser();
+      } else {
+        setCurrentUser(null);
+      }
+       if (_event === 'SIGNED_OUT' && (pathname.startsWith('/booking') || pathname.startsWith('/my-bookings') )) {
         router.push('/login-user');
       }
-      if (event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
+      if (_event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
         router.push('/');
       }
-      router.refresh(); // Refresh to re-evaluate server components potentially depending on auth
+      setIsLoading(false);
     });
 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [router, pathname]);
+  }, [router, pathname, fetchCurrentUser]);
 
   const handleLogout = async () => {
-    setIsSheetOpen(false); // Close sheet first
+    setIsSheetOpen(false);
     const result = await signOutUser();
     if (result.success) {
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push('/'); // Redirect to home after logout
+      setCurrentUser(null); 
+      router.push('/');
       router.refresh();
     } else {
       toast({ title: "Logout Failed", description: result.error || "Could not log out.", variant: "destructive" });
     }
   };
 
-  const allNavItems = [
-    ...baseNavItems,
-    ...(session ? authNavItems : []),
-    ...(session ? [] : noAuthNavItems),
-    adminNavItem // Always show admin link for simplicity, access control is on admin pages
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      toast({ title: "Search Submitted", description: `You searched for: ${searchQuery}` });
+      setSearchQuery(""); 
+    }
+  };
+
+  const renderNavLink = (item: NavItem, isMobile = false) => {
+    const commonClasses = "text-sm font-medium transition-colors hover:text-primary";
+    const mobileLinkClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary";
+    const desktopLinkClasses = `text-foreground/70 ${commonClasses}`;
+
+    if (item.isDropdownTrigger && item.children) {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses,
+                "flex items-center"
+              )}
+            >
+              {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+              {item.title}
+              <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform duration-200", {"group-data-[state=open]:rotate-180": !isMobile})} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align={isMobile ? "start" : "center"} className="w-56">
+            {item.children.map((child) => (
+              <DropdownMenuItem key={child.title} asChild onClick={() => isMobile && setIsSheetOpen(false)}>
+                <Link href={child.href} className="flex items-center gap-2">
+                  {child.icon && <child.icon className="h-4 w-4 text-muted-foreground" />}
+                  {child.title}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    if (item.isButton) {
+      return (
+         <Button variant={isMobile ? "ghost" : "default"} size="sm" asChild className={isMobile ? "w-full justify-start px-3 py-2 " + mobileLinkClasses : ""} onClick={() => isMobile && setIsSheetOpen(false)}>
+            <Link href={item.href}>
+              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+              {item.title}
+            </Link>
+          </Button>
+      );
+    }
+    
+    if (item.action) {
+       return (
+        <Button variant="ghost" className={isMobile ? "justify-start w-full " + mobileLinkClasses : desktopLinkClasses} onClick={item.action}>
+            {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+            {item.title}
+        </Button>
+       );
+    }
+
+    return (
+      <Link
+        href={item.href}
+        className={isMobile ? mobileLinkClasses : desktopLinkClasses}
+        onClick={() => isMobile && setIsSheetOpen(false)}
+      >
+        {isMobile && item.icon && <item.icon className="h-5 w-5" />}
+        {item.title}
+      </Link>
+    );
+  };
+
+  const mobileNavItems: NavItem[] = [
+    ...mainNavLinks.flatMap(item => {
+      if (item.isDropdownTrigger && item.children) {
+        // Ensure item.children is actually an array before mapping
+        const childrenArray = Array.isArray(item.children) ? item.children : [];
+        const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` })); // Indent children titles
+        return [item, ...mappedChildren];
+      } else {
+        return [item];
+      }
+    }),
+    ...(session ? authenticatedUserNavLinks : []),
+    ...(session ? [{ title: "Logout", href: "#", icon: LogOut, action: handleLogout }] : guestNavLinks),
   ];
-  
-  const mobileNavItems = [...allNavItems];
-  if (session) {
-    mobileNavItems.push({ title: "Logout", href: "#", icon: LogOut });
-  }
 
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-headline text-xl font-semibold">
+      <div className="container flex h-16 items-center">
+        <Link href="/" className="mr-6 flex items-center gap-2 font-headline text-xl font-semibold" onClick={() => setIsSheetOpen(false)}>
           <MountainSnow className="h-7 w-7 text-primary" />
-          Tanzania Tourist Trails
+          <span className="hidden sm:inline">Tanzania Tourist Trails</span>
+          <span className="sm:hidden">TTT</span>
         </Link>
         
-        <nav className="hidden md:flex gap-4 items-center">
-          {baseNavItems.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
-            >
-              {item.title}
-            </Link>
+        <nav className="hidden md:flex flex-grow items-center gap-4 lg:gap-6">
+          {mainNavLinks.map((item) => (
+            <div key={item.title}>{renderNavLink(item)}</div>
           ))}
-           {session && authNavItems.map((item) => (
-             <Link
-              key={item.title}
-              href={item.href}
-              className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
-            >
-              {item.title}
-            </Link>
-          ))}
+          <div className="flex-grow" /> 
+          
+          <form onSubmit={handleSearchSubmit} className="relative ml-auto flex-1 sm:flex-initial max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 sm:w-[200px] lg:w-[250px] h-9 rounded-md"
+            />
+          </form>
+
           {isLoading ? (
-            <div className="h-6 w-20 bg-muted rounded animate-pulse"></div>
-          ) : !session ? (
+            <div className="h-8 w-24 bg-muted rounded animate-pulse ml-2"></div>
+          ) : session ? (
             <>
-              {noAuthNavItems.map(item => (
-                <Button key={item.title} variant="ghost" size="sm" asChild>
-                  <Link href={item.href}>
-                    {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                    {item.title}
-                  </Link>
-                </Button>
+              {authenticatedUserNavLinks.filter(item => item.isButton).map((item) => (
+                 <div key={item.title} className="ml-2">{renderNavLink(item)}</div>
               ))}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="ml-2 flex items-center gap-2 px-3 py-2 h-9">
+                    <User className="h-5 w-5" />
+                    <span className="text-sm font-medium hidden lg:inline">
+                      {currentUser?.full_name ? currentUser.full_name.split(' ')[0] : 'Account'}
+                    </span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>{currentUser?.full_name || currentUser?.email || 'My Account'}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {authenticatedUserNavLinks.filter(item => !item.isButton).map((item) => (
+                     <DropdownMenuItem key={item.title} asChild>
+                      <Link href={item.href} className="flex items-center gap-2">
+                        {item.icon && <item.icon className="h-4 w-4 text-muted-foreground" />}
+                        {item.title}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer">
+                    <LogOut className="h-4 w-4 text-muted-foreground" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
+            guestNavLinks.map((item) => (
+              <div key={item.title} className="ml-2">{renderNavLink(item)}</div>
+            ))
           )}
         </nav>
 
-        <div className="md:hidden">
+        <div className="md:hidden ml-auto">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
@@ -149,43 +294,45 @@ export default function Header() {
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+            <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
               <SheetHeader className="mb-4 border-b pb-4">
-                <SheetTitle asChild>
-                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setIsSheetOpen(false)}>
-                    <MountainSnow className="h-7 w-7 text-primary" />
-                    Tanzania Trails
-                  </Link>
-                </SheetTitle>
+                <SheetClose asChild>
+                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                      <MountainSnow className="h-7 w-7 text-primary" />
+                      Tanzania Trails
+                    </Link>
+                </SheetClose>
               </SheetHeader>
-              <nav className="grid gap-2 text-base font-medium">
+              <form onSubmit={handleSearchSubmit} className="relative mb-4">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-full h-10 rounded-md"
+                />
+              </form>
+              <nav className="grid gap-1 text-base font-medium">
                 {mobileNavItems.map((item) => {
-                  if (item.auth && !session && !isLoading) return null;
-                  if (item.noAuth && session && !isLoading) return null;
-                  
-                  if (item.title === "Logout") {
-                    return (
-                      <Button
-                        key={item.title}
-                        variant="ghost"
-                        className="w-full justify-start px-3 py-2 text-base"
-                        onClick={handleLogout}
-                      >
-                        {item.icon && <item.icon className="mr-2 h-5 w-5" />}
+                   if (item.isDropdownTrigger && item.children) {
+                    const mainItem = (
+                      <div key={`${item.title}-trigger`} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
+                        {item.icon && <item.icon className="h-5 w-5" />}
                         {item.title}
-                      </Button>
+                      </div>
                     );
+                    const childrenItems = item.children.map(child => (
+                      <SheetClose asChild key={child.title}>
+                        {renderNavLink({...child, title: child.title}, true)}
+                      </SheetClose>
+                    ));
+                    return [mainItem, ...childrenItems];
                   }
                   return (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                      onClick={() => setIsSheetOpen(false)}
-                    >
-                      {item.icon && <item.icon className="h-5 w-5" />}
-                      {item.title}
-                    </Link>
+                    <SheetClose asChild key={item.title}>
+                      {renderNavLink(item, true)}
+                    </SheetClose>
                   );
                 })}
               </nav>

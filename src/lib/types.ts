@@ -53,8 +53,13 @@ export interface NavItem {
   href: string;
   icon?: React.ElementType;
   disabled?: boolean;
-  auth?: boolean; // true if link should only be shown to authenticated users
-  noAuth?: boolean; // true if link should only be shown to unauthenticated users
+  auth?: boolean; // Link shown only if authenticated
+  noAuth?: boolean; // Link shown only if NOT authenticated
+  isDropdownTrigger?: boolean; // Indicates this item is a trigger for a dropdown
+  children?: NavItem[]; // Sub-items for a dropdown
+  action?: () => void; // For items like Logout
+  isSearch?: boolean; // Special type for rendering search bar
+  isButton?: boolean; // Should it be styled as a button
 }
 
 export interface UserFeedback {
