@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Mail, MessageSquare, Facebook, Instagram } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Temporarily commented out
 
 const socialLinks = [
   {
@@ -38,26 +38,19 @@ export default function Footer() {
         <div className="mb-8">
           <p className="text-base font-semibold text-foreground mb-4">Connect with Milangali Kimu</p>
           <div className="flex justify-center items-center gap-x-3 sm:gap-x-4">
-            <TooltipProvider>
-              {socialLinks.map((link) => (
-                <Tooltip key={link.name}>
-                  <TooltipTrigger asChild>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Contact Milangali Kimu via ${link.name}`}
-                      className="p-2.5 rounded-full text-foreground hover:bg-accent/10 hover:text-accent-foreground transition-all duration-200 ease-in-out transform hover:scale-110"
-                    >
-                      <link.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{link.label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
+            {/* Tooltip components are removed for this test */}
+            {socialLinks.map((link) => (
+              <a
+                key={link.name} // Key is on the anchor tag now
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Contact Milangali Kimu via ${link.name} (${link.label})`} // Added label to aria-label for accessibility
+                className="p-2.5 rounded-full text-foreground hover:bg-accent/10 hover:text-accent-foreground transition-all duration-200 ease-in-out transform hover:scale-110"
+              >
+                <link.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+              </a>
+            ))}
           </div>
         </div>
 
