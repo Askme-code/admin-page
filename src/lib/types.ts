@@ -7,9 +7,9 @@ export interface Article {
   category: string;
   featured_image?: string;
   status: 'draft' | 'published';
-  author: string; 
-  created_at: string; 
-  updated_at: string; 
+  author: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Destination {
@@ -17,35 +17,35 @@ export interface Destination {
   name: string;
   description: string;
   featured_image?: string;
-  location?: string; 
+  location?: string;
   highlights?: string[];
   status: 'draft' | 'published';
-  created_at: string; 
-  updated_at: string; 
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Event {
   id: string;
   title: string;
   description: string;
-  event_date: string; 
+  event_date: string;
   location: string;
   featured_image?: string;
   status: 'draft' | 'published';
-  created_at: string; 
-  updated_at: string; 
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TravelTip {
   id: string;
   title: string;
   content: string;
-  icon: string; 
-  category: string; 
-  featured_image?: string; 
+  icon: string;
+  category: string;
+  featured_image?: string;
   status: 'draft' | 'published';
-  created_at: string; 
-  updated_at: string; 
+  created_at: string;
+  updated_at: string;
 }
 
 export interface NavItem {
@@ -53,6 +53,8 @@ export interface NavItem {
   href: string;
   icon?: React.ElementType;
   disabled?: boolean;
+  auth?: boolean; // true if link should only be shown to authenticated users
+  noAuth?: boolean; // true if link should only be shown to unauthenticated users
 }
 
 export interface UserFeedback {
@@ -68,22 +70,66 @@ export interface UserFeedback {
 export interface UserReview {
   id: string;
   full_name: string;
-  email: string; // For admin reference
-  rating: number; // 1-5
+  email: string;
+  rating: number;
   review: string;
   location?: string;
-  image_url?: string; // URL of the reviewer's image from Supabase Storage
+  image_url?: string;
   status: 'pending' | 'published' | 'rejected';
   created_at: string;
-  updated_at: string; 
+  updated_at: string;
 }
 
 export interface YoutubeUpdate {
-  id: string; // bigint in Supabase, string in JS/TS
+  id: string;
   caption: string;
-  post_date: string; // date in Supabase, string in JS/TS (ISO format)
+  post_date: string;
   url: string;
   likes: number;
   dislikes: number;
   created_at: string;
+}
+
+// New types for User Auth and Booking
+export interface PublicUser {
+  id: string; // UUID from auth.users
+  full_name: string;
+  email: string;
+  phone?: string;
+  // password_hash is managed by Supabase Auth, not directly handled in client/frontend types typically
+  role: 'user' | 'admin';
+  status: 'active' | 'suspended' | 'pending_verification';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tour {
+  id: string; // UUID
+  name: string;
+  description?: string | null;
+  location?: string | null;
+  price?: number | null;
+  duration_hours?: number | null;
+  image_url?: string | null;
+  status: 'available' | 'unavailable' | 'archived';
+  created_at: string;
+}
+
+export interface TourBooking {
+  id: number; // Serial
+  user_id: string; // UUID, references auth.users(id)
+  full_name: string;
+  email: string;
+  phone?: string | null;
+  tour_id: string; // UUID, references tours(id)
+  booking_date: string; // Date
+  tour_date: string; // Date
+  number_of_people: number;
+  notes?: string | null;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  total_price?: number | null;
+  created_at: string;
+  updated_at: string;
+  tours?: Tour; // For joining data
+  users?: PublicUser; // For joining data, if needed (though user_id links to auth.users)
 }
