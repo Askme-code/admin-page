@@ -6,7 +6,6 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  // SheetTitle, // Removed unused import
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet';
@@ -70,9 +69,8 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCurrentUser = useCallback(async () => {
-    // Ensure session is not null before attempting to access session.user
-    const currentSessionData = await supabase.auth.getSession(); // Get current session directly
-    if (currentSessionData && currentSessionData.data.session?.user) {
+    const currentSessionData = await supabase.auth.getSession();
+    if (currentSessionData?.data.session?.user) {
         const userProfile = await getCurrentUser();
         setCurrentUser(userProfile);
     } else {
@@ -96,6 +94,7 @@ export default function Header() {
     getSessionAndUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setIsLoading(true);
       setSession(newSession);
       if (newSession?.user) {
         await fetchCurrentUser();
@@ -108,7 +107,7 @@ export default function Header() {
       if (_event === 'SIGNED_IN' && (pathname === '/login-user' || pathname === '/signup')) {
         router.push('/');
       }
-      setIsLoading(false); // Ensure loading state is managed here too
+      setIsLoading(false);
     });
 
     return () => {
@@ -206,11 +205,10 @@ export default function Header() {
     );
   };
 
- const mobileNavItems: NavItem[] = mainNavLinks.flatMap(item => {
+  const mobileNavItems: NavItem[] = mainNavLinks.flatMap(item => {
     if (item.isDropdownTrigger && item.children) {
-      // Ensure children is an array before mapping
       const childrenArray = Array.isArray(item.children) ? item.children : [];
-      const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` })); // Indent children
+      const mappedChildren = childrenArray.map(c => ({ ...c, title: `  ${c.title}` }));
       return [item, ...mappedChildren];
     }
     return [item];
@@ -233,7 +231,7 @@ export default function Header() {
           {mainNavLinks.map((item) => (
             <div key={item.title}>{renderNavLink(item)}</div>
           ))}
-          <div className="flex-grow" /> {/* Spacer */}
+          <div className="flex-grow" /> {}
 
           <form onSubmit={handleSearchSubmit} className="relative ml-auto flex-1 sm:flex-initial max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -318,7 +316,6 @@ export default function Header() {
               </form>
               <nav className="grid gap-1 text-base font-medium">
                 {mobileNavItems.map((item, index) => {
-                   // Check if item is a dropdown trigger and has children for mobile rendering
                    if (item.isDropdownTrigger && item.children) {
                      const mainItem = (
                         <div key={`${item.title}-trigger-${index}`} className="px-3 py-2 text-muted-foreground font-semibold flex items-center gap-3">
@@ -326,16 +323,14 @@ export default function Header() {
                           {item.title}
                         </div>
                      );
-                     // Ensure item.children is an array before mapping
                      const childrenArray = Array.isArray(item.children) ? item.children : [];
-                     const childrenItems = childrenArray.map(child => (
-                        <SheetClose asChild key={`${child.title}-child-${index}`}>
+                     const childrenItems = childrenArray.map((child, childIndex) => (
+                        <SheetClose asChild key={`${child.title}-child-${index}-${childIndex}`}>
                           {renderNavLink({...child, title: `  ${child.title}`}, true)}
                         </SheetClose>
                      ));
                      return [mainItem, ...childrenItems];
                    }
-                   // Render non-dropdown items or dropdown items without children directly
                    return (
                      <SheetClose asChild key={`${item.title}-item-${index}`}>
                        {renderNavLink(item, true)}
@@ -350,5 +345,3 @@ export default function Header() {
     </header>
   );
 }
-
-    
