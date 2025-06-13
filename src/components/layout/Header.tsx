@@ -7,7 +7,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetClose,
-  SheetTrigger // Added SheetTrigger here
+  SheetTrigger,
+  SheetTitle // Added SheetTitle import
 } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -231,7 +232,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center gap-2 font-headline text-xl font-semibold" onClick={() => setIsSheetOpen(false)}>
+        <Link href="/" className="mr-6 flex items-center gap-2 font-headline text-xl font-semibold" onClick={() => isSheetOpen && setIsSheetOpen(false)}>
           <MountainSnow className="h-7 w-7 text-primary" />
           <span className="hidden sm:inline">Tanzania Tourist Trails</span>
           <span className="sm:hidden">TTT</span>
@@ -308,13 +309,13 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
-              <SheetHeader className="mb-4 border-b pb-4">
-                <SheetClose asChild>
-                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                      <MountainSnow className="h-7 w-7 text-primary" />
-                      Tanzania Trails
-                    </Link>
-                </SheetClose>
+              <SheetHeader className="mb-4 border-b pb-4 text-left">
+                <SheetTitle>
+                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setIsSheetOpen(false)}>
+                    <MountainSnow className="h-7 w-7 text-primary" />
+                    Tanzania Trails
+                  </Link>
+                </SheetTitle>
               </SheetHeader>
               <form onSubmit={handleSearchSubmit} className="relative mb-4">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -351,3 +352,4 @@ export default function Header() {
     </header>
   );
 }
+
