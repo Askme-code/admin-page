@@ -36,7 +36,7 @@ export default function AdminEventsPage() {
       setLoading(false);
     };
     fetchEvents();
-  }, []); // Changed [toast] to []
+  }, []); 
   
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this event?")) {

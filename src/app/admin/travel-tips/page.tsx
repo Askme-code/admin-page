@@ -42,7 +42,7 @@ export default function AdminTravelTipsPage() {
       setLoading(false);
     };
     fetchTravelTips();
-  }, []); // Changed [toast] to []
+  }, []); 
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this travel tip?")) {

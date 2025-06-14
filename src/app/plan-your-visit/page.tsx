@@ -26,7 +26,7 @@ export default function PlanYourVisitPage() {
         {/* Hero Section */}
         <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/70 to-accent/70 text-primary-foreground">
           <Image
-            src="https://placehold.co/1920x600.png" // Replace with a stunning Tanzania/Zanzibar hero image
+            src="https://placehold.co/1920x600.png" 
             alt="Scenic view of Zanzibar or Tanzania"
             layout="fill"
             objectFit="cover"
@@ -175,4 +175,3 @@ export default function PlanYourVisitPage() {
     </div>
   );
 }
-

@@ -35,7 +35,7 @@ export default function AdminDestinationsPage() {
       setLoading(false);
     };
     fetchDestinations();
-  }, []); // Changed [toast] to []
+  }, []); 
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this destination?")) {
