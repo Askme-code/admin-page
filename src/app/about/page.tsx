@@ -6,22 +6,41 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Mail, Phone, Facebook, Instagram, Users, Globe, Award, Sparkles, HeartHandshake, UsersRound, TrendingUp, Target, CheckCircle, ShieldCheck, Search, Ticket, ListChecks, UserPlus, Mountain } from 'lucide-react';
+import ImageSlideshow from '@/components/ui/image-slideshow';
 
 export default function AboutPage() {
+  const slideShowImages = [
+    '/images/bg1.jpg',
+    '/images/bg2.jpg',
+    '/images/bg3.jpg',
+    '/images/bg4.jpg',
+    '/images/bg5.jpg',
+    '/images/bg6.jpg',
+  ];
+
+  const slideShowCaptions = [
+    { heading: "Our Journey, Your Adventure", subheading: "Discover the story behind Tanzania Tourist Trails and our commitment to authentic experiences." },
+    { heading: "Passion for Tanzania", subheading: "We're dedicated to sharing the unparalleled wonders of our homeland with the world." },
+    { heading: "Meet the Visionary", subheading: "Connecting you to unforgettable Tanzanian explorations, led by local expertise." },
+    { heading: "More Than Just Tours", subheading: "Building bridges, supporting local communities, and fostering sustainable tourism." },
+    { heading: "Your Trusted Partner in Travel", subheading: "Crafting authentic and memorable Tanzanian adventures tailored for you." },
+    { heading: "The Heart of Africa Awaits", subheading: "Let us guide your discovery of Tanzania's rich culture, wildlife, and landscapes." }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/70 to-accent/70 text-primary-foreground">
-          <Image
-            src="https://placehold.co/1920x700.png"
-            alt="Scenic Tanzanian landscape"
-            layout="fill"
-            objectFit="cover"
-            className="absolute inset-0 z-0 opacity-30"
-            data-ai-hint="Tanzania safari landscape"
-            priority
+          <ImageSlideshow
+            images={slideShowImages}
+            // Captions for the slideshow background itself are optional here, 
+            // as the main hero text is separate. We can omit them or use very subtle ones.
+            // For now, let's omit them to let the main h1/p shine.
+            // captions={slideShowCaptions} 
+            className="absolute inset-0 z-0"
+            activeImageOpacity={0.3}
           />
           <div className="container relative z-10 text-center">
             <h1 className="font-headline text-4xl md:text-6xl font-bold mb-4">About Tanzania Tourist Trails</h1>
@@ -213,4 +232,6 @@ export default function AboutPage() {
     </div>
   );
 }
+    
+
     
